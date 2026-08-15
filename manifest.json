@@ -1,7 +1,7 @@
 {
     "targets":  [
                     {
-                        "sha256":  "15f87fbddc0e79e776254bcd94bc3196b7cdd1de2c994c91d286d0a0c8c561d1",
+                        "sha256":  "1ae95e7f04967f9e60290548fe821e81abc00da16b21dc2df56822e082cfe330",
                         "file":  "dsh-sandbox-policy/lib/index.js"
                     },
                     {
@@ -9,15 +9,15 @@
                         "file":  "dsh-sandbox/lib/index.js"
                     },
                     {
-                        "sha256":  "3d86942b7d852b46ddba96b48deec3754968638d0d1508b53b6bf6c30d693b97",
+                        "sha256":  "012150ec7062e860cd9bf117f3025c5d074c6e5b7ce2cc2c099669c461447df7",
                         "file":  "dsh-permission-presets/lib/index.js"
                     },
                     {
-                        "sha256":  "1833863d29b6ae39e679601019c22906841970a5c7ad988e934e6db6d084260c",
+                        "sha256":  "4cca5119f9cc49430314989ef681b1f07587f7f216e2658f622fad79542b2c1d",
                         "file":  "dsh-sandbox-windows-acl/lib/runner.js"
                     },
                     {
-                        "sha256":  "324b46bb126445dae46bf153a792ffff2b07a003cb06c817bea8404aa99f06c0",
+                        "sha256":  "07b69a493ddf6631bcf3e655cf2fabc46423366ed39de3cdf55d4c3b9a418c07",
                         "file":  "dsh-sandbox-windows-acl/lib/types-CNjZgO4h.js"
                     },
                     {
@@ -25,11 +25,11 @@
                         "file":  "dsh-sandbox-local/lib/index.js"
                     },
                     {
-                        "sha256":  "3e7b3b76dbe4da9171a39d6bd3b38e523a80744d94e2799e78ba029763c047ff",
+                        "sha256":  "3cb6637c904aef361e2be9290177f4568c88aaf892c26f4b1961d30559288977",
                         "file":  "dsh-tool-pwsh/lib/index.js"
                     },
                     {
-                        "sha256":  "d1afe6bb0c6d4937efcce1e0eac948771f1ae66f73bc78bc5b1221f507870e9e",
+                        "sha256":  "6d46823d419bb155220537d6aacca61e6d9127ca2d351747fb0a7f84e473212f",
                         "file":  "dsh-client-connection/lib/client.js"
                     },
                     {
@@ -38,6 +38,6 @@
                     }
                 ],
     "name":  "dsh-plugin-net-access",
-    "version":  "0.1.0",
-    "note":  "Patched files for DeepSeek Harness rc.6 (lib/ built bundles). See README.md."
+    "version":  "0.2.0",
+    "note":  "net-access v2: strict token (same as workspace-write) + network tooling injection. See README.md."
 }

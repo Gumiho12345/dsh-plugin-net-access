@@ -1193,14 +1193,7 @@ function buildRestrictingSids(sids) {
 * @returns the restricted token handle.
 */
 function createRestrictedToken(api, currentToken, logonSid, writeSids, known, mode) {
-	const restrictingSids = buildRestrictingSids(mode === "read-only" ? [logonSid, known.world] : mode === "net-access" ? [
-		logonSid,
-		known.world,
-		known.authenticatedUsers,
-		known.interactive,
-		known.local,
-		...writeSids
-	] : writeSids.length === 0 ? (() => {
+	const restrictingSids = buildRestrictingSids(mode === "read-only" ? [logonSid, known.world] : writeSids.length === 0 ? (() => {
 		throw new Error("createRestrictedToken: workspace-write restricting list requires at least one write SID");
 	})() : [
 		logonSid,
@@ -1208,12 +1201,13 @@ function createRestrictedToken(api, currentToken, logonSid, writeSids, known, mo
 		...writeSids
 	]);
 	const tokenSlot = allocPtrSlot();
-	// net-access keeps the groups SSPI-adjacent APIs need and default privileges
-	// (no DISABLE_MAX_PRIVILEGE); WRITE_RESTRICTED stays — it is required for
-	// the process to start at all (verified: without it the child dies with
-	// STATUS_DLL_NOT_FOUND), and it is precisely what gates writes to the
-	// workspace/temp capability SIDs.
-	const disableFlags = mode === "net-access" ? 12 : 13;
+	// WRITE_RESTRICTED stays for every mode: it is required for the process to
+	// start at all (verified: without it the child dies with STATUS_DLL_NOT_FOUND)
+	// and it is precisely what gates writes to the workspace/temp capability SIDs.
+	// net-access uses the SAME strict token as workspace-write (no extra groups,
+	// no privileges) — its network capability comes from the runner's tooling
+	// environment (see runner.js), never from a looser token.
+	const disableFlags = 13;
 	if (api.createRestrictedToken(currentToken, disableFlags, 0, null, 0, null, restrictingSids.length / 16, restrictingSids, tokenSlot) === 0) throwLastError(api, "CreateRestrictedToken", `restricting SIDs: ${restrictingSids.length / 16}`);
 	const token = decodePtr(tokenSlot);
 	if (token === null) throwWin32(api, "CreateRestrictedToken", api.getLastError(), "null token handle");
@@ -1503,18 +1497,6 @@ var AclSandbox = class {
 			const worldSid = makeWellKnownSid(api, 1);
 			this.sidAllocations.push(worldSid);
 			const known = { world: worldSid };
-			if (this.mode === "net-access") {
-				// net-access keeps the groups SSPI/LSA requires (Authenticated Users,
-				// INTERACTIVE, LOCAL) in the restricting list so outbound credential
-				// acquisition (HTTPS/Schannel, NTLM, WMI) works, while WRITE_RESTRICTED
-				// pass-2 still confines writes to the workspace/temp capability SIDs.
-				known.authenticatedUsers = makeWellKnownSid(api, 17);
-				this.sidAllocations.push(known.authenticatedUsers);
-				known.interactive = makeWellKnownSid(api, 11);
-				this.sidAllocations.push(known.interactive);
-				known.local = makeWellKnownSid(api, 2);
-				this.sidAllocations.push(known.local);
-			}
 			restrictedToken = createRestrictedToken(api, currentToken, logonSid, [this.writeSidPtr, this.tempWriteSidPtr].filter((sid) => sid !== void 0), known, this.mode);
 			this.token = restrictedToken;
 			setTokenDefaultDaclGrant(api, restrictedToken, this.tempWriteSidPtr ?? this.writeSidPtr ?? worldSid);

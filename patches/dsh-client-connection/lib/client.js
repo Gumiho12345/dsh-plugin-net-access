@@ -7406,7 +7406,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 			"net-access": {
 				sandbox: "net-access",
 				approval: "ask",
-				description: "File writes confined to the workspace; restores WMI/read access. Schannel HTTPS still requires full access."
+				description: "File writes strictly confined like workspace-write; network tooling (OpenSSL curl) enabled. Schannel HTTPS still requires full access."
 			},
 			"danger-full-access": {
 				sandbox: "danger-full-access",

@@ -70,3 +70,9 @@ schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030e)
 1. **代理中介（broker）**：沙箱进程走明文 TCP 到全令牌 sidecar，由 sidecar 终止 TLS（注意：CONNECT 隧道不够，客户端仍需自己做 TLS 握手 → 必须 MITM 终止或使用非 Schannel 客户端）；
 2. **AppContainer 沙箱**：UWP 式容器天然支持 Schannel，但 CLI 兼容性与配置复杂度高；
 3. 或接受现状：写保护 + 非 Schannel TLS（本补丁包的方案）。
+
+## 9. v1 → v2 演进记录（2026-08-15）
+
+- **v1**：为恢复 WMI/CIM 与读取，把 Authenticated Users/INTERACTIVE/LOCAL 加入限制 SID 列表并保留特权（flags=12）。实测后果：① C:\ 根目录可写（本机 C:\ 根存在 AU 的 (OI)(CI)(IO)(M) 继承 ACE，AU 进入限制列表后 pass-2 放行）；② C:\Users\Public 可写（INTERACTIVE/Everyone 授权）；③ Schannel HTTPS 依然失败（加组/留特权对 LSA 出站检查无效）。**两头不讨好**。
+- **v2 修正**：令牌回到与 workspace-write 完全一致（限制列表仅 [logon SID, Everyone, 工作区 SID, 临时 SID]，flags=13 无特权）。实测：C:\ 根 DENIED、用户目录 DENIED、Public 仍可写（Everyone 是受限令牌的必需保活组——去掉则进程启动失败 STATUS_DLL_NOT_FOUND，机制下限）、WMI 回到不可用（与 workspace-write 一致，文档明示）。
+- **HTTPS 改用"工具箱注入"**：runner 在 net-access 模式下把 DSH_NETACCESS_TOOLBIN（默认 ~/.dsh/netaccess-tools/bin）前置到 PATH 并设置 CURL_CA_BUNDLE → 沙箱内 `curl.exe` 解析到 OpenSSL/LibreSSL 构建，实测 HTTP 200 verify=0。node/python 自带 TLS 栈，本就可用；git 配 `http.sslBackend openssl` 后可用。

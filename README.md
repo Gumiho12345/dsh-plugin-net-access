@@ -1,103 +1,117 @@
 # dsh-plugin-net-access
 
-DeepSeek Harness (DSH) **Net Access** 权限模式补丁包：工作区文件写保护不变，同时恢复被沙箱令牌手术误伤的 Windows API（WMI/CIM、读取、正常用户组）。
+DeepSeek Harness (DSH) **Net Access** 权限模式 v2：**文件写保护与 workspace-write 完全一致（严格）**，同时通过"网络工具箱注入"让沙箱内的 `curl.exe` HTTPS 可用。
 
-> 状态：为 `@deepseek-ai/dsh 0.1.0-rc.6`（Windows）制作。核心引擎改动以补丁包形式提供（rc.6 的模式词汇表是编译期闭合的，无法用纯配置插件实现）；预设部分同时提供了标准 dsh 插件形态（`plugin/`）。
+> 状态：为 `@deepseek-ai/dsh 0.1.0-rc.6`（Windows）制作。核心引擎改动以补丁包形式提供（rc.6 模式词汇表编译期闭合，纯配置插件无法扩展）；预设部分同时提供标准 dsh 插件形态（`plugin/`）。
 
-## 为什么需要它
+## v2 设计（相对 v1 的修正）
 
-DSH 的 Windows 沙箱用 `CreateRestrictedToken`（WRITE_RESTRICTED + 限制 SID + 移除 Authenticated Users/INTERACTIVE/LOCAL）实现文件写保护。该令牌会**连带卡死所有 SSPI 出站调用**（Schannel HTTPS、NTLM、WMI），表现就是 GUI 命令通道里 `curl`/`Invoke-WebRequest` 全部 `SEC_E_NO_CREDENTIALS (0x8009030E)`。
+v1 为恢复 WMI 而把 Authenticated Users/INTERACTIVE 加进了限制 SID 列表，代价是 **C:\ 根目录与 C:\Users\Public 重新可写**（实测确认），且 Schannel HTTPS 依然不可用——两头不讨好。**v2 全部修正**：
 
-经过 6 组令牌标志位矩阵实测，这是平台机制级死结：
+| 项 | v1 | **v2** |
+|---|---|---|
+| 令牌 | 放宽（加组+留特权） | **与 workspace-write 完全一致的严格令牌**（WRITE_RESTRICTED + 能力 SID + 无特权） |
+| C:\ 根目录写入 | ✅ 可写（泄露） | ❌ **DENIED（实测）** |
+| 用户目录/桌面写入 | ❌ | ❌ DENIED（实测） |
+| C:\Users\Public 写入 | ✅ 可写 | ⚠️ 仍可写（Everyone 是受限令牌**必需保活组**，机制下限；Public 为系统共享区，非用户数据） |
+| WMI/CIM | ✅（靠放宽令牌） | ❌ 与 workspace-write 一致（严格令牌的固有取舍，文档明示） |
+| **HTTPS（curl.exe）** | ❌ | ✅ **可用**（PATH 注入 OpenSSL/LibreSSL 版 curl，实测 HTTP 200 verify=0） |
 
-| 变体 | 结果 |
-|---|---|
-| 加回 Authenticated Users / INTERACTIVE / LOCAL 组 | ❌ SSPI 仍失败 |
-| 保留默认特权 | ❌ 仍失败 |
-| 去掉 WRITE_RESTRICTED | ❌ 进程无法启动（STATUS_DLL_NOT_FOUND） |
+**HTTPS 的解法**：不碰 Schannel（受限令牌下无解，见 [调查记录](docs/findings-zh.md)），而是由 runner 在 net-access 模式下把非 Schannel 的 curl 目录**前置到 PATH** 并设置 `CURL_CA_BUNDLE` —— 沙箱里敲 `curl.exe` 直接走 LibreSSL 完成 TLS。
 
-**net-access 的定位**：保持 WRITE_RESTRICTED 写保护（工作区+临时目录可写，其余拒绝），把组/特权恢复到正常用户水平 → WMI/CIM、读取恢复，非 Schannel TLS 客户端（Python/OpenSSL）可用。**Schannel HTTPS（curl/IWR）在任何受限令牌模式下都不可能工作**——需要 HTTPS 请用 Python/OpenSSL，或临时切 Full access（完整令牌）。
+## 特性表
 
-## 特性
-
-| 能力 | workspace-write | **net-access** | full access |
+| 能力 | workspace-write | **net-access (v2)** | full access |
 |---|---|---|---|
 | 工作区写入 | ✅ | ✅ | ✅ |
-| 工作区外写入 | ❌ | ❌ | ✅ |
-| WMI/CIM (`Get-CimInstance`) | ❌ 拒绝访问 | ✅ 恢复 | ✅ |
-| 工作区外读取 | ❌ | ✅ 恢复 | ✅ |
-| Python/OpenSSL HTTPS | ✅ | ✅ | ✅ |
-| curl/IWR HTTPS (Schannel) | ❌ | ❌ | ✅ |
+| 工作区外写入（用户数据/C:\根） | ❌ | ❌ | ✅ |
+| C:\Users\Public 写入 | ⚠️ | ⚠️（机制下限） | ✅ |
+| WMI/CIM | ❌ | ❌ | ✅ |
+| `curl.exe` HTTPS（OpenSSL 版） | ❌ | ✅ | ✅ |
+| node / python HTTPS | ✅ | ✅ | ✅ |
+| 系统 curl / Invoke-WebRequest（Schannel） | ❌ | ❌ | ✅ |
 
 ## 安装
 
 ### 1. 引擎补丁（必须）
 
-以管理员/普通权限打开 PowerShell，在仓库目录运行：
-
 ```powershell
 .\install.ps1
 ```
 
-脚本会扫描所有 DSH 安装位置（npx 缓存、`~\.dsh\profiles`、npm 全局），对每个目标文件：备份为 `*.netaccess.bak` → 覆盖为补丁版本 → SHA256 校验。可重复运行（已备份则跳过）。
+自动扫描所有 DSH 安装位置，逐文件：备份 `*.netaccess.bak` → 覆盖 → SHA256 校验。幂等可重跑。
 
-### 2. 预设注册（二选一）
+### 2. 部署 HTTPS 工具箱（net-access 生效前提）
 
-**方式 A — dsh 插件（推荐）**：
-
-```powershell
-# 本地目录方式
-dsh plugin add .\plugin        # 在仓库根目录运行
-# 或发布到 GitHub 后：
-dsh plugin add dsh-plugin-net-access   # 按 dsh plugin 的实际用法
-```
-
-**方式 B — 手动**：把 `patches\profile-cordis.patch.yml` 复制为 `%USERPROFILE%\.dsh\profiles\web\cordis.patch.yml`（先备份原文件）。
-
-### 3. 重启生效
+在你自己的控制台执行一次（把 OpenSSL/LibreSSL 版 curl 放到 runner 约定的目录）：
 
 ```powershell
-dsh restart   # 或：杀掉 3080 端口进程后重新 npx @deepseek-ai/dsh web
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.dsh\netaccess-tools\bin" | Out-Null
+Copy-Item 'D:\共享文件夹\curl\curl-8.21.0_7-win64-mingw\bin\curl.exe', 'D:\共享文件夹\curl\curl-8.21.0_7-win64-mingw\bin\curl-ca-bundle.crt' "$env:USERPROFILE\.dsh\netaccess-tools\bin\"
 ```
 
-浏览器打开 `http://127.0.0.1:3080` 并**硬刷新**（Ctrl+Shift+R）。左下角权限选择器出现 **Net Access**（盾牌+地球图标）。
+（官方 OpenSSL/LibreSSL 版 curl 从 https://curl.se/windows/ 下载；也可用 `DSH_NETACCESS_TOOLBIN` 环境变量指向其他目录。）
+
+### 3. 预设注册（二选一）
+
+```powershell
+dsh plugin add .\plugin            # 本地插件形态
+# 或手动：把 patches\profile-cordis.patch.yml 覆盖到 %USERPROFILE%\.dsh\profiles\web\cordis.patch.yml（先备份）
+```
+
+### 4. 重启生效
+
+```powershell
+dsh restart
+```
+
+浏览器硬刷新（Ctrl+Shift+R）后，权限选择器出现 **Net Access**（盾牌+地球图标）。
 
 ## 验证
 
 ```powershell
-Get-CimInstance Win32_OperatingSystem        # 应正常返回（net-access 前是拒绝访问）
-python -c "import urllib.request; print(urllib.request.urlopen('https://example.com',timeout=15).status)"   # 200
-# 工作区外写入应被拒：
-Set-Content "$env:USERPROFILE\Desktop\test.txt" 'x'   # 应报拒绝访问
+curl.exe -sS -o NUL -w "%{http_code}" https://example.com   # 200（沙箱内 PATH 已注入）
+python -c "import urllib.request; print(urllib.request.urlopen('https://example.com').status)"  # 200
+Set-Content "$env:USERPROFILE\Desktop\test.txt" 'x'          # 拒绝访问
+New-Item -ItemType Directory C:\na_test                      # 拒绝访问
 ```
+
+## 威胁模型与边界（v2）
+
+| 场景 | 状态 |
+|---|---|
+| 破坏用户数据（主目录/桌面） | ❌ 被 WRITE_RESTRICTED 拦截（实测） |
+| 在 C:\ 根创建条目 | ❌ 拦截（实测） |
+| 写 C:\Users\Public | ⚠️ 允许——Everyone 是受限令牌启动所必需的保活组（去掉进程无法启动，已实证）；Public 为系统共享区 |
+| 读取系统元数据（WMI/进程枚举） | ❌ WMI 不可用（严格令牌丢 Authenticated Users，与 workspace-write 相同） |
+| 数据外泄（网络外传） | ⚠️ 不设防——net-access 本就不限制网络；需防外泄请用断网环境或人工审批兜底 |
+| 本地提权 | 低——非提权 + 无特权令牌（DISABLE_MAX_PRIVILEGE），实测无 SeImpersonate |
+| 供应链（仓库被篡改） | SHA256 校验防意外损坏；建议核对 git commit |
+| Schannel HTTPS | ❌ 任何受限令牌模式均不可用（平台死结，见 docs/findings-zh.md）；用 OpenSSL 版 curl/python/node |
 
 ## 卸载
 
 ```powershell
-.\uninstall.ps1     # 从 *.netaccess.bak 恢复所有文件
-# 删除预设：还原 profile 的 cordis.patch.yml 备份 / dsh plugin remove
+.\uninstall.ps1     # 恢复 *.netaccess.bak + 预设备份
 dsh restart
 ```
 
 ## 目录结构
 
 ```
-patches/                  # 9 个打过补丁的引擎/客户端文件（按包相对路径存放）
-  profile-cordis.patch.yml # 权限预设补丁（用户层）
-plugin/                   # 标准 dsh 插件形态（仅预设部分）
+patches/                   # 9 个打过补丁的引擎/客户端文件 + 预设补丁
+plugin/                    # 标准 dsh 插件形态（预设部分）
 install.ps1 / uninstall.ps1 / manifest.json
-docs/findings-zh.md       # 完整调查记录（标志位矩阵、WMI 风险分析）
+docs/findings-zh.md        # 完整调查记录（WRITE_RESTRICTED vs SSPI 死结、v1→v2 演进）
 assets/net-access-icon.svg
-extras/dsh-launcher.ps1   # 可选：后台启停启动器（dsh start/stop/restart/status）
+extras/dsh-launcher.ps1    # 可选后台启停启动器
 ```
 
-## 上游化建议（给官方仓库）
+## 上游化建议
 
-- `packages/sandbox/windows-acl`：`createRestrictedToken` 增加 `net-access` 分支（限制 SID 加入 AU/INTERACTIVE/LOCAL，flags 12）；
-- `packages/sandbox` / `packages/sandbox-policy` / `packages/permission-presets`：模式词汇表与预设表加入 `net-access`；
-- 客户端：权限选择器 glyph 增加 net-access 条目；
-- README 记录 `WRITE_RESTRICTED` 与 LSA 出站 SSPI 的兼容性结论；
-- 真正的"写保护 + Schannel HTTPS"两全方案需要绕开令牌机制：代理中介（broker，由全令牌 sidecar 终止 TLS）或 AppContainer 沙箱。
+- `packages/sandbox/windows-acl` runner：增加 net-access 模式的工具目录 PATH/CURL_CA_BUNDLE 注入；
+- `packages/sandbox`/`sandbox-policy`/`permission-presets`：模式词汇表与预设加入 `net-access`；
+- 真正"写保护 + Schannel HTTPS"两全需要绕开令牌：代理中介（broker，全令牌 sidecar 终止 TLS）或 AppContainer 沙箱。
 
 ## 许可
 

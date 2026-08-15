@@ -1,6 +1,6 @@
 import { n as tempWriteSid, o as assertTempRootOutsideWorkspace, r as workspaceWriteSid, s as win32, t as AclSandbox } from "./types-CNjZgO4h.js";
 import { existsSync, mkdtempSync, rmSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { delimiter as pathDelimiter, join } from "node:path";
 //#region lib/types/runner.js
 /**
 * The windows-acl confinement runner: the argv-prefix wrapper the sandbox
@@ -113,6 +113,26 @@ async function main() {
 	const parsed = parseArgs(process.argv.slice(2));
 	requireDirectory("--workspace", parsed.workspace);
 	requireDirectory("--temp", parsed.temp);
+	if (parsed.mode === "net-access") {
+		// Network tooling environment: if a non-Schannel curl lives in
+		// DSH_NETACCESS_TOOLBIN (default ~/.dsh/netaccess-tools/bin), prepend it
+		// to PATH so `curl.exe` resolves to the OpenSSL/LibreSSL build and point
+		// CURL_CA_BUNDLE at its CA file. Schannel itself cannot work under the
+		// restricted token (WRITE_RESTRICTED vs LSA, verified); this is how HTTPS
+		// becomes usable in net-access without loosening the token.
+		const userHome = process.env.USERPROFILE ?? "";
+		const toolBin = process.env.DSH_NETACCESS_TOOLBIN ?? join(userHome, ".dsh", "netaccess-tools", "bin");
+		if (toolBin !== "" && existsSync(toolBin)) {
+			process.env.PATH = `${toolBin}${pathDelimiter}${process.env.PATH ?? ""}`;
+			for (const ca of ["curl-ca-bundle.crt", "cacert.pem", "ca-bundle.crt"]) {
+				const caPath = join(toolBin, ca);
+				if (existsSync(caPath)) {
+					process.env.CURL_CA_BUNDLE = caPath;
+					break;
+				}
+			}
+		}
+	}
 	const seamManaged = parsed.writeSid !== void 0 || parsed.tempWriteSid !== void 0;
 	if (parsed.mode === "read-only" && seamManaged) fail("read-only does not accept --write-sid or --temp-write-sid");
 	if ((parsed.mode === "workspace-write" || parsed.mode === "net-access") && parsed.writeSid === void 0 !== (parsed.tempWriteSid === void 0)) fail(`${parsed.mode} requires --write-sid and --temp-write-sid together`);
