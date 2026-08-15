@@ -63,7 +63,3 @@ install.ps1 / uninstall.ps1 / manifest.json
 docs/findings-zh.md # 技术调查记录（令牌与 Schannel 的兼容性结论）
 extras/             # dsh-launcher.ps1（可选后台启停启动器）
 ```
-
-## 上游
-
-runner 注入 + 模式词汇表这两处改动应进官方仓库（deepseek-ai/deepseek-harness），详见 docs/findings-zh.md。
