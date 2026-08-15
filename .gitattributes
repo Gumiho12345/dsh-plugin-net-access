@@ -1,0 +1,4 @@
+# Patches are byte-exact: no EOL conversion ever (manifest hashes are LF-based).
+patches/** -text
+# PowerShell scripts: always CRLF on checkout (Windows convention).
+*.ps1 text eol=crlf

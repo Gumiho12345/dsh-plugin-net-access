@@ -51,6 +51,16 @@ foreach ($root in $roots) {
       $blockers += "  $target`n    installed : $cur`n    expected original: $($entry.original)"
       continue
     }
+    # Source-side preflight: the repo-side patch file must byte-match the
+    # manifest (a CRLF-mangled checkout would otherwise be copied over the
+    # engine and only then fail the post-copy verification).
+    $src = Join-Path $Repo "patches\$($entry.file)"
+    if (-not (Test-Path $src)) { $blockers += "  missing patch source: $src"; continue }
+    $srcHash = Get-Sha256 $src
+    if ($srcHash -ne $entry.sha256) {
+      $blockers += "  patch source hash mismatch (CRLF-mangled checkout?): $src`n    source : $srcHash`n    expected: $($entry.sha256)"
+      continue
+    }
     $plan += @{ root = $root; entry = $entry; target = $target }
   }
 }
