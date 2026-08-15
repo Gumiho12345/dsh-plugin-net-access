@@ -1,39 +1,71 @@
 # dsh-plugin-net-access
 
-给 DSH 加一个 `net-access` 权限模式（仅 Windows）：**文件写保护和 workspace-write 一样严格，但沙箱里的 curl.exe 能用 HTTPS**。
+DSH 的 `net-access` 权限模式补丁（仅 Windows）。
 
-## 原理
+## 它能干什么
 
-DSH 的 Windows 沙箱靠受限令牌（WRITE_RESTRICTED）挡写，副作用是沙箱里所有走 Schannel 的 HTTPS 都会挂（0x8009030E）。这是 Windows 平台的硬限制，改令牌救不回来（试过 6 种组合，记录在 docs/findings-zh.md）。
+- **文件写保护照旧**：沙箱里和 workspace-write 一样，写不了工作区外的文件（用户数据、C:\ 根目录都会被拒）
+- **沙箱里的 curl.exe 能用 HTTPS**：DSH 自带沙箱的受限令牌会让所有走 Schannel 的 HTTPS 报 `0x8009030E`（Windows 平台限制，原因见 docs/findings-zh.md），net-access 通过注入 OpenSSL 版 curl 绕开它
+- 附带一个 **Net Access 权限预设**，左下角权限选择器里可选
 
-所以 net-access 的令牌和 workspace-write **完全一样**，runner 只额外做了一件事：把非 Schannel 版 curl 的目录前置到 PATH，并设置 `CURL_CA_BUNDLE`。沙箱里敲 `curl.exe` 走的是 LibreSSL，HTTPS 就能用了。
+## 已知限制
+
+- `C:\Users\Public` 挡不住：Everyone 是受限令牌必需的保活组，机制下限
+- 系统 curl / Invoke-WebRequest（走 Schannel）依然不能用：请用 OpenSSL 版 curl / python / node，或切 full access
+- WMI 不可用（和 workspace-write 一样）
+- 只支持 DSH `0.1.0-rc.6`，其他版本需重新打补丁
 
 ## 安装
 
-1. 跑 `install.ps1` —— 自动找 DSH 安装位置，逐文件备份 + 覆盖 + SHA256 校验，可重复运行
-2. 从 [curl.se](https://curl.se/windows/) 下载官方 win64 版 curl，把 `curl.exe` 和 `curl-ca-bundle.crt` 放进 `%USERPROFILE%\.dsh\netaccess-tools\bin\`（不想用默认位置就设环境变量 `DSH_NETACCESS_TOOLBIN`）
-3. 预设二选一：`dsh plugin add .\plugin`，或把 `patches\profile-cordis.patch.yml` 复制到 `~\.dsh\profiles\web\cordis.patch.yml`（先备份原文件）
-4. `dsh restart`，硬刷新浏览器，权限选择器选 **Net Access**
+前置：Windows + Node.js + DSH 0.1.0-rc.6
+
+**1. 引擎补丁**
+
+```powershell
+.\install.ps1
+```
+
+脚本自动找 DSH 安装位置，逐文件备份（`*.netaccess.bak`）后覆盖，带 SHA256 校验，可重复运行。
+
+**2. HTTPS 工具箱**（net-access 下 curl 能用 HTTPS 的前提）
+
+从 [curl.se](https://curl.se/windows/) 下载官方 win64 版 curl，解压后把 `curl.exe` 和 `curl-ca-bundle.crt` 复制到：
+
+```
+%USERPROFILE%\.dsh\netaccess-tools\bin\
+```
+
+（不想用这个位置，就设环境变量 `DSH_NETACCESS_TOOLBIN` 指到别的目录。）
+
+**3. 权限预设**（二选一）
+
+```powershell
+dsh plugin add .\plugin
+```
+
+或手动：把 `patches\profile-cordis.patch.yml` 复制到 `%USERPROFILE%\.dsh\profiles\web\cordis.patch.yml`（先备份原文件）。
+
+## 使用
+
+1. **重启 DSH**（官方方式）：在启动 DSH 的终端按 `Ctrl+C`，或 `netstat -ano | findstr 3080` 查到进程号后 `taskkill /F /PID <进程号>`，再重新运行 `npx @deepseek-ai/dsh web`
+2. 打开 `http://127.0.0.1:3080`，硬刷新浏览器，左下角权限选择器选 **Net Access**
 
 ## 验证
 
 ```powershell
-curl.exe -sS https://example.com                       # 200
-Set-Content "$env:USERPROFILE\Desktop\t.txt" x         # 拒绝访问
-New-Item -ItemType Directory C:\t                      # 拒绝访问
+curl.exe -sS https://example.com                    # 200
+Set-Content "$env:USERPROFILE\Desktop\t.txt" x      # 拒绝访问
+New-Item -ItemType Directory C:\t                   # 拒绝访问
 ```
-
-## 边界
-
-- 用户数据、C:\ 根目录：写保护生效；`C:\Users\Public` 挡不住——Everyone 是受限令牌必需的保活组，机制下限
-- WMI 和 workspace-write 一样不可用
-- 系统 curl / Invoke-WebRequest（Schannel）依然不行：用 OpenSSL 版 curl / python / node，或切 full access
-- 绑定 DSH 0.1.0-rc.6，升级 DSH 后需重新打补丁（install.ps1 校验会提示）
 
 ## 卸载
 
-`uninstall.ps1` 恢复备份，`dsh restart`。
+```powershell
+.\uninstall.ps1
+```
+
+（恢复所有备份文件），还原 `cordis.patch.yml`，重启 DSH。
 
 ## 上游
 
-这套改动（runner 注入 + 模式词汇表）应该进官方仓库，见 docs/findings-zh.md。
+这套改动（runner 注入 + 模式词汇表）应该进官方仓库，详见 docs/findings-zh.md。
