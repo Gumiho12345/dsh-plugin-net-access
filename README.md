@@ -1,6 +1,7 @@
 # dsh-plugin-net-access
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Gumiho12345/dsh-plugin-net-access?style=social&label=Star)](https://github.com/Gumiho12345/dsh-plugin-net-access/stargazers)
 
 DSH 的权限模式补丁：新增 **Net Access** 模式，在保持 workspace-write 文件写保护的基础上，恢复沙箱内的 HTTPS 访问。
 
@@ -55,3 +56,7 @@ Set-Content "$env:USERPROFILE\Desktop\t.txt" x
 ## 许可
 
 MIT。`patches/` 目录里的文件来自 `@deepseek-ai/dsh-*`（MIT，Copyright (c) 2026 DeepSeek），使用/分发时请保留相应署名。
+
+---
+
+觉得有用的话，欢迎点个 ⭐ Star 支持一下。
