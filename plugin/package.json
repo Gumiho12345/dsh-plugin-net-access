@@ -1,0 +1,12 @@
+{
+  "name": "dsh-plugin-net-access",
+  "version": "0.1.0",
+  "description": "Net Access permission preset for DeepSeek Harness: file-write confined to the workspace, WMI/read access restored.",
+  "license": "MIT",
+  "private": false,
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

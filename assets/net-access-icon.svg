@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16" fill="none">
+  <!-- Net Access: shield + globe (used in the DSH permission selector) -->
+  <path d="M8.20554 0.899994L14.7901 3.36857V7.01026C14.7901 12 11.0466 14.2103 8.20554 15.3C5.36446 14.2103 1.62012 12 1.62012 7.01026V3.36857L8.20554 0.899994Z"
+        stroke="currentColor" stroke-width="1.31831" stroke-linejoin="round"/>
+  <path d="M8.20554 4.9A2.6 2.6 0 1 0 8.20554 10.1A2.6 2.6 0 1 0 8.20554 4.9Z"
+        stroke="currentColor" stroke-width="1.05" fill="none"/>
+  <path d="M5.60554 7.5H10.8055"
+        stroke="currentColor" stroke-width="1.05" fill="none"/>
+  <path d="M8.20554 4.9C6.8 5.9 6.8 9.1 8.20554 10.1C9.6 9.1 9.6 5.9 8.20554 4.9Z"
+        stroke="currentColor" stroke-width="1.05" fill="none"/>
+</svg>
