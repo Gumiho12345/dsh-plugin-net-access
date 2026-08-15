@@ -24,7 +24,7 @@ DSH 的 Windows 沙箱（workspace-write）会拦截走 Schannel 的 HTTPS 请�
 
 ## 安装
 
-方式一：npm 安装（自动注册权限预设）
+方式一：npm 安装
 
 ```powershell
 npx @deepseek-ai/dsh plugin --profile web add dsh-plugin-net-access
