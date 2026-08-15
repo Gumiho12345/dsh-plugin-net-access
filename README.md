@@ -42,7 +42,7 @@ Set-Content "$env:USERPROFILE\Desktop\t.txt" x
 下面这些是机制决定的，不是配置问题：
 
 - 系统自带的 curl 和 `Invoke-WebRequest` 依然不可用——它们走 Schannel，在受限令牌下无解。用本插件带的 `curl.exe`、python 或 node。
-- `C:\Users\Public` 依然可写——`Everyone` 是受限令牌必需的保活组，去掉进程就起不来。
+- `C:\Users\Public` 可写（workspace-write 同样如此）——`Everyone` 是受限令牌必需的保活组，去掉进程就起不来。
 - WMI 不可用，和 workspace-write 一致。
 - 补丁绑定 `0.1.0-rc.6`：升级 DSH 后需要重装。`setup.ps1` 会校验文件哈希，版本不匹配会直接中止、不会乱改。
 
