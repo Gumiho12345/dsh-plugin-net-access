@@ -22,11 +22,20 @@ DSH 的 Windows 沙箱（workspace-write）会拦截走 Schannel 的 HTTPS 请�
 
 ## 安装
 
+方式一：npm 安装（自动注册权限预设）
+
+```powershell
+npx @deepseek-ai/dsh plugin --profile web add dsh-plugin-net-access
+. "$env:USERPROFILE\.dsh\profiles\web\node_modules\dsh-plugin-net-access\setup.ps1"
+```
+
+方式二：从 GitHub 下载后运行
+
 ```powershell
 .\setup.ps1
 ```
 
-这一条命令会做三件事：给引擎打补丁、注册权限预设、从 curl.se 自动下载 OpenSSL 版 curl 工具箱到 `%USERPROFILE%\.dsh\netaccess-tools\bin\`。
+`setup.ps1` 会做三件事：给引擎打补丁、注册权限预设、从 curl.se 自动下载 OpenSSL 版 curl 工具箱到 `%USERPROFILE%\.dsh\netaccess-tools\bin\`。
 
 装完重启 DSH（`Ctrl+C` 停掉 3080 端口的进程再重新 `npx @deepseek-ai/dsh web`），刷新页面，在左下角权限选择器里选 **Net Access**。
 

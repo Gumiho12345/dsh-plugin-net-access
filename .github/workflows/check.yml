@@ -12,7 +12,9 @@ jobs:
           python - <<'EOF'
           import hashlib, json, pathlib
           manifest = json.loads(pathlib.Path("manifest.json").read_text())
-          json.loads(pathlib.Path("plugin/package.json").read_text())
+          json.loads(pathlib.Path("package.json").read_text())
+          if not pathlib.Path("plugin/cordis.patch.yml").exists():
+              bad.append("missing plugin/cordis.patch.yml")
           bad = []
           for t in manifest["targets"]:
               p = pathlib.Path("patches") / t["file"]

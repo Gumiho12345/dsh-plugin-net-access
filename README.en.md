@@ -22,11 +22,20 @@ The sandbox token stays exactly the same as workspace-write; the runner just pre
 
 ## Install
 
+Option 1: via npm (registers the permission preset automatically)
+
+```powershell
+npx @deepseek-ai/dsh plugin --profile web add dsh-plugin-net-access
+. "$env:USERPROFILE\.dsh\profiles\web\node_modules\dsh-plugin-net-access\setup.ps1"
+```
+
+Option 2: download from GitHub and run
+
 ```powershell
 .\setup.ps1
 ```
 
-This one command does three things: patches the engine, registers the permission preset, and downloads the OpenSSL curl toolbox from curl.se into `%USERPROFILE%\.dsh\netaccess-tools\bin\`.
+`setup.ps1` does three things: patches the engine, registers the permission preset, and downloads the OpenSSL curl toolbox from curl.se into `%USERPROFILE%\.dsh\netaccess-tools\bin\`.
 
 Restart DSH (Ctrl+C in its terminal, or find the 3080 listener with `netstat -ano | findstr 3080` and `taskkill /F /PID <pid>`, then `npx @deepseek-ai/dsh web`), refresh the page, and pick **Net Access** in the permission selector (bottom-left).
 

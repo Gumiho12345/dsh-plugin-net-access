@@ -1,9 +1,33 @@
 {
   "name": "dsh-plugin-net-access",
   "version": "0.1.0",
-  "description": "Net Access permission mode for DeepSeek Harness (Windows): workspace-write write protection + HTTPS in the sandbox via OpenSSL curl injection.",
+  "description": "Net Access permission preset for DeepSeek Harness (Windows): HTTPS works inside the sandbox while file writes stay confined like workspace-write.",
   "license": "MIT",
-  "private": true,
+  "private": false,
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "net-access",
+    "sandbox",
+    "windows",
+    "permission"
+  ],
+  "files": [
+    "plugin/",
+    "patches/",
+    "docs/",
+    "manifest.json",
+    "install.ps1",
+    "setup.ps1",
+    "uninstall.ps1",
+    "LICENSE",
+    "README.md",
+    "README.en.md"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/dsh": "0.1.0-rc.6"
+  },
   "dsh": {
     "bundle": {
       "patch": "./plugin/cordis.patch.yml"
