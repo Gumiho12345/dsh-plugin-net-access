@@ -3,6 +3,7 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Gumiho12345/dsh-plugin-net-access?style=social&label=Star)](https://github.com/Gumiho12345/dsh-plugin-net-access/stargazers)
 [![Awesome DSH Plugin](https://beancookie.github.io/awesome-dsh-plugin/badge.svg)](https://beancookie.github.io/awesome-dsh-plugin)
+[![npm version](https://img.shields.io/npm/v/dsh-plugin-net-access.svg)](https://www.npmjs.com/package/dsh-plugin-net-access)
 
 [简体中文](README.md) | English
 
@@ -38,7 +39,7 @@ Option 2: download from GitHub and run
 
 `setup.ps1` does three things: patches the engine, registers the permission preset, and downloads the OpenSSL curl toolbox from curl.se into `%USERPROFILE%\.dsh\netaccess-tools\bin\`.
 
-Restart DSH (Ctrl+C in its terminal, or find the 3080 listener with `netstat -ano | findstr 3080` and `taskkill /F /PID <pid>`, then `npx @deepseek-ai/dsh web`), refresh the page, and pick **Net Access** in the permission selector (bottom-left).
+**A full DSH restart is required for the plugin to load**: stop the 3080 listener (Ctrl+C in its terminal, or `netstat -ano | findstr 3080` + `taskkill /F /PID <pid>`), then run `npx @deepseek-ai/dsh web` again. Refreshing the browser alone will not load the new plugin. After the restart, refresh the page and pick **Net Access** in the permission selector (bottom-left).
 
 ## Verify
 

@@ -3,6 +3,7 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Gumiho12345/dsh-plugin-net-access?style=social&label=Star)](https://github.com/Gumiho12345/dsh-plugin-net-access/stargazers)
 [![Awesome DSH Plugin](https://beancookie.github.io/awesome-dsh-plugin/badge.svg)](https://beancookie.github.io/awesome-dsh-plugin)
+[![npm version](https://img.shields.io/npm/v/dsh-plugin-net-access.svg)](https://www.npmjs.com/package/dsh-plugin-net-access)
 
 [English](README.en.md) | 简体中文
 
@@ -38,7 +39,7 @@ npx @deepseek-ai/dsh plugin --profile web add dsh-plugin-net-access
 
 `setup.ps1` 会做三件事：给引擎打补丁、注册权限预设、从 curl.se 自动下载 OpenSSL 版 curl 工具箱到 `%USERPROFILE%\.dsh\netaccess-tools\bin\`。
 
-装完重启 DSH（`Ctrl+C` 停掉 3080 端口的进程再重新 `npx @deepseek-ai/dsh web`），刷新页面，在左下角权限选择器里选 **Net Access**。
+装完**必须完全重启 DSH 才能加载**：在终端 `Ctrl+C` 停掉 3080 端口的进程，重新运行 `npx @deepseek-ai/dsh web`。光刷新浏览器不会加载新插件。重启后刷新页面，在左下角权限选择器里选 **Net Access**。
 
 ## 验证
 
