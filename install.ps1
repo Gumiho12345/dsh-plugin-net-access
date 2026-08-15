@@ -31,12 +31,20 @@ function Get-DshRoots {
 function Get-Sha256($path) { (Get-FileHash $path -Algorithm SHA256).Hash.ToLower() }
 
 # ---- Phase 1: preflight (no writes) ----
+$roots = @(Get-DshRoots)
+if ($roots.Count -eq 0) {
+  Write-Host "ABORT: no DSH installation found (scanned npm caches, ~/.dsh/profiles and npm global)."
+  Write-Host "Install DeepSeek Harness 0.1.0-rc.6 first (npx @deepseek-ai/dsh web), then re-run this script."
+  exit 1
+}
 $plan = @()
 $blockers = @()
-foreach ($root in Get-DshRoots) {
+$found = @{}
+foreach ($root in $roots) {
   foreach ($entry in $Manifest.targets) {
     $target = Join-Path $root $entry.file
-    if (-not (Test-Path $target)) { Write-Host "SKIP (target missing): $target"; continue }
+    if (-not (Test-Path $target)) { continue }
+    $found[$entry.file] = $true
     $cur = Get-Sha256 $target
     if ($cur -eq $entry.sha256) { Write-Host "ALREADY PATCHED: $($entry.file)"; continue }
     if ($cur -ne $entry.original) {
@@ -45,6 +53,12 @@ foreach ($root in Get-DshRoots) {
     }
     $plan += @{ root = $root; entry = $entry; target = $target }
   }
+}
+$missing = @($Manifest.targets | Where-Object { -not $found[$_.file] } | ForEach-Object { $_.file })
+if ($missing.Count -gt 0) {
+  Write-Host "ABORT: these patched files were not found in any DSH installation (is this DeepSeek Harness 0.1.0-rc.6?):"
+  $missing | ForEach-Object { Write-Host "  $_" }
+  exit 1
 }
 if ($blockers.Count -gt 0) {
   Write-Host "ABORT: installed files do not match DeepSeek Harness 0.1.0-rc.6 originals - DSH version differs or files were modified. Nothing was changed:"
