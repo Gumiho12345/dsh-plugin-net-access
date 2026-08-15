@@ -10,20 +10,15 @@ DSH 的 Windows 沙箱（受限令牌）会卡死所有走 Schannel 的 HTTPS（
 
 前置：Windows + Node.js + DSH rc.6。
 
-```sh
-# 1. 权限预设（标准 dsh 插件安装）
-dsh plugin add .\plugin
+**一键安装（引擎补丁 + 权限预设 + HTTPS 工具箱自动下载）：**
 
-# 2. 引擎补丁（自动备份为 *.netaccess.bak + SHA256 校验）
-.\install.ps1
-
-# 3. HTTPS 工具箱：从 https://curl.se/windows/ 下载官方 win64 版 curl，
-#    把 curl.exe 和 curl-ca-bundle.crt 放到：
-#    %USERPROFILE%\.dsh\netaccess-tools\bin\
-#    （或设环境变量 DSH_NETACCESS_TOOLBIN 指定其他目录）
+```powershell
+.\setup.ps1
 ```
 
-重启 DSH（启动终端按 `Ctrl+C`，或 `netstat -ano | findstr 3080` 查进程号后 `taskkill /F /PID <pid>`，再 `npx @deepseek-ai/dsh web`），浏览器硬刷新，左下角权限选择器选 **Net Access**。
+装完重启 DSH（启动终端按 `Ctrl+C`，或 `netstat -ano | findstr 3080` 查进程号后 `taskkill /F /PID <pid>`，再 `npx @deepseek-ai/dsh web`），浏览器硬刷新，左下角权限选择器选 **Net Access**。
+
+分步安装（可选）：`install.ps1` 只打引擎补丁和预设；HTTPS 工具箱也可手动放：从 [curl.se](https://curl.se/windows/) 下载 win64 版 curl，把 `curl.exe` 和 `curl-ca-bundle.crt` 放进 `%USERPROFILE%\.dsh\netaccess-tools\bin\`（或用环境变量 `DSH_NETACCESS_TOOLBIN` 指定其他目录）。
 
 ## 特性
 
