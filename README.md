@@ -63,3 +63,7 @@ install.ps1 / uninstall.ps1 / manifest.json
 docs/findings-zh.md # 技术调查记录（令牌与 Schannel 的兼容性结论）
 extras/             # dsh-launcher.ps1（可选后台启停启动器）
 ```
+
+## 许可
+
+MIT（见 [LICENSE](LICENSE)）。`patches/` 内含 `@deepseek-ai/dsh-*` 包（MIT，Copyright (c) 2026 DeepSeek）的修改后文件，保留其原始版权声明。

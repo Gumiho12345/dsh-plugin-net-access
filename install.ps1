@@ -1,6 +1,8 @@
 # dsh-plugin-net-access installer
-# Scans every DSH install location, backs up each target to *.netaccess.bak,
-# overwrites with the patched file, and verifies the SHA256 from manifest.json.
+# Phase 1 (preflight) verifies every target against the manifest ORIGINAL hash
+# (pristine 0.1.0-rc.6) and aborts BEFORE touching anything on mismatch.
+# Phase 2 backs up (*.netaccess.bak), overwrites, and verifies the patched hash.
+# Idempotent: already-patched files are skipped.
 $ErrorActionPreference = 'Stop'
 $Repo = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Manifest = Get-Content (Join-Path $Repo 'manifest.json') -Raw | ConvertFrom-Json
@@ -26,22 +28,41 @@ function Get-DshRoots {
   $roots | Where-Object { $_ -and (Test-Path $_) } | Sort-Object -Unique
 }
 
-$patched = 0
+function Get-Sha256($path) { (Get-FileHash $path -Algorithm SHA256).Hash.ToLower() }
+
+# ---- Phase 1: preflight (no writes) ----
+$plan = @()
+$blockers = @()
 foreach ($root in Get-DshRoots) {
-  Write-Host "== install root: $root"
   foreach ($entry in $Manifest.targets) {
     $target = Join-Path $root $entry.file
-    if (-not (Test-Path $target)) { Write-Host "  SKIP (target missing): $($entry.file)"; continue }
-    $bak = "$target.netaccess.bak"
-    if (-not (Test-Path $bak)) {
-      Copy-Item $target $bak -Force
-      Write-Host "  backup: $($entry.file).netaccess.bak"
+    if (-not (Test-Path $target)) { Write-Host "SKIP (target missing): $target"; continue }
+    $cur = Get-Sha256 $target
+    if ($cur -eq $entry.sha256) { Write-Host "ALREADY PATCHED: $($entry.file)"; continue }
+    if ($cur -ne $entry.original) {
+      $blockers += "  $target`n    installed : $cur`n    expected original: $($entry.original)"
+      continue
     }
-    Copy-Item (Join-Path $Repo "patches\$($entry.file)") $target -Force
-    $h = (Get-FileHash $target -Algorithm SHA256).Hash.ToLower()
-    if ($h -ne $entry.sha256) { Write-Host "  VERIFY FAILED: $target"; exit 1 }
-    $patched++
-    Write-Host "  PATCHED: $($entry.file)"
+    $plan += @{ root = $root; entry = $entry; target = $target }
+  }
+}
+if ($blockers.Count -gt 0) {
+  Write-Host "ABORT: installed files do not match DeepSeek Harness 0.1.0-rc.6 originals - DSH version differs or files were modified. Nothing was changed:"
+  $blockers | ForEach-Object { Write-Host $_ }
+  exit 1
+}
+
+# ---- Phase 2: apply ----
+if ($plan.Count -eq 0) {
+  Write-Host 'Nothing to do (all targets already patched or absent).'
+} else {
+  foreach ($item in $plan) {
+    $bak = "$($item.target).netaccess.bak"
+    if (-not (Test-Path $bak)) { Copy-Item $item.target $bak -Force; Write-Host "  backup: $($item.entry.file).netaccess.bak" }
+    Copy-Item (Join-Path $Repo "patches\$($item.entry.file)") $item.target -Force
+    $h = Get-Sha256 $item.target
+    if ($h -ne $item.entry.sha256) { Write-Host "VERIFY FAILED: $($item.target)"; exit 1 }
+    Write-Host "  PATCHED: $($item.entry.file)"
   }
 }
 
@@ -61,4 +82,4 @@ if (Test-Path $profilePatch) {
 }
 
 Write-Host ""
-Write-Host "Done: $patched files patched. Restart dsh (dsh restart) and hard-refresh the browser (Ctrl+Shift+R)."
+Write-Host "Done. Restart DSH (Ctrl+C or taskkill the 3080 listener, then npx @deepseek-ai/dsh web) and hard-refresh the browser."

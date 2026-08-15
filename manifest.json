@@ -1,43 +1,52 @@
 {
-    "targets":  [
-                    {
-                        "sha256":  "1ae95e7f04967f9e60290548fe821e81abc00da16b21dc2df56822e082cfe330",
-                        "file":  "dsh-sandbox-policy/lib/index.js"
-                    },
-                    {
-                        "sha256":  "f32acb248fe6c9cae6abd8e0639403629f0b47b8202293dcffacbd662a5050cc",
-                        "file":  "dsh-sandbox/lib/index.js"
-                    },
-                    {
-                        "sha256":  "012150ec7062e860cd9bf117f3025c5d074c6e5b7ce2cc2c099669c461447df7",
-                        "file":  "dsh-permission-presets/lib/index.js"
-                    },
-                    {
-                        "sha256":  "4cca5119f9cc49430314989ef681b1f07587f7f216e2658f622fad79542b2c1d",
-                        "file":  "dsh-sandbox-windows-acl/lib/runner.js"
-                    },
-                    {
-                        "sha256":  "07b69a493ddf6631bcf3e655cf2fabc46423366ed39de3cdf55d4c3b9a418c07",
-                        "file":  "dsh-sandbox-windows-acl/lib/types-CNjZgO4h.js"
-                    },
-                    {
-                        "sha256":  "21eb4d727f91704d4809f066321c695ac542a4c06a5bd3102531faf50918fd60",
-                        "file":  "dsh-sandbox-local/lib/index.js"
-                    },
-                    {
-                        "sha256":  "3cb6637c904aef361e2be9290177f4568c88aaf892c26f4b1961d30559288977",
-                        "file":  "dsh-tool-pwsh/lib/index.js"
-                    },
-                    {
-                        "sha256":  "6d46823d419bb155220537d6aacca61e6d9127ca2d351747fb0a7f84e473212f",
-                        "file":  "dsh-client-connection/lib/client.js"
-                    },
-                    {
-                        "sha256":  "e62d28fee01696ea10f4e9755673643532f9e1d8c68bd4e7dbb484534bf13afe",
-                        "file":  "dsh-client-ui-conversation/lib/client.js"
-                    }
-                ],
-    "name":  "dsh-plugin-net-access",
-    "version":  "0.2.0",
-    "note":  "net-access v2: strict token (same as workspace-write) + network tooling injection. See README.md."
+  "name": "dsh-plugin-net-access",
+  "version": "0.1.0",
+  "note": "Patched files for DeepSeek Harness 0.1.0-rc.6 (built bundles). install.ps1 verifies the ORIGINAL hash before overwriting and aborts on mismatch.",
+  "targets": [
+    {
+      "file": "dsh-sandbox-policy/lib/index.js",
+      "original": "59b17a98d4235890cdf93eaa47b1871c7b3e0a359ea71b6f571e3c79265c3814",
+      "sha256": "1ae95e7f04967f9e60290548fe821e81abc00da16b21dc2df56822e082cfe330"
+    },
+    {
+      "file": "dsh-sandbox/lib/index.js",
+      "original": "63ee2a10873a336162acd9a0d7da7f5f3dc59d072456a0b5271da277565e324f",
+      "sha256": "f32acb248fe6c9cae6abd8e0639403629f0b47b8202293dcffacbd662a5050cc"
+    },
+    {
+      "file": "dsh-permission-presets/lib/index.js",
+      "original": "f19f19b55ba6e43d0c99a479df1dc651f288aa42d68f74d9196872710578c69e",
+      "sha256": "012150ec7062e860cd9bf117f3025c5d074c6e5b7ce2cc2c099669c461447df7"
+    },
+    {
+      "file": "dsh-sandbox-windows-acl/lib/runner.js",
+      "original": "01ccd99079a0f9861b1bfae5b7a6291599e9e1552612c497c4b46c8dc1024e29",
+      "sha256": "4cca5119f9cc49430314989ef681b1f07587f7f216e2658f622fad79542b2c1d"
+    },
+    {
+      "file": "dsh-sandbox-windows-acl/lib/types-CNjZgO4h.js",
+      "original": "d75087768cc528fec521c8e93259ff3b37a9fb4d3c627f132ea76f23fb4b4f54",
+      "sha256": "07b69a493ddf6631bcf3e655cf2fabc46423366ed39de3cdf55d4c3b9a418c07"
+    },
+    {
+      "file": "dsh-sandbox-local/lib/index.js",
+      "original": "fa5489c0017f89574d610ea470e1d8cd2a45a9f355ef936c0fb689966f2f8c3a",
+      "sha256": "21eb4d727f91704d4809f066321c695ac542a4c06a5bd3102531faf50918fd60"
+    },
+    {
+      "file": "dsh-tool-pwsh/lib/index.js",
+      "original": "75612e8ec2e8fe18bdb8b4d026b113e3017845e85385db1277ec41e08137a920",
+      "sha256": "3cb6637c904aef361e2be9290177f4568c88aaf892c26f4b1961d30559288977"
+    },
+    {
+      "file": "dsh-client-connection/lib/client.js",
+      "original": "45fdcf6f5cd772160c49186424cf8e81d528e25f2d10aac8323a90a011b1d3c1",
+      "sha256": "6d46823d419bb155220537d6aacca61e6d9127ca2d351747fb0a7f84e473212f"
+    },
+    {
+      "file": "dsh-client-ui-conversation/lib/client.js",
+      "original": "0f7927e6284159b9b4138df50a1d64755e6e3ff76064bb06309678392530a829",
+      "sha256": "e62d28fee01696ea10f4e9755673643532f9e1d8c68bd4e7dbb484534bf13afe"
+    }
+  ]
 }
