@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/Gumiho12345/dsh-plugin-net-access/main/assets/net-access-icon.svg" width="96" height="96" alt="dsh-plugin-net-access icon"/></p>
+
 # dsh-plugin-net-access
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
