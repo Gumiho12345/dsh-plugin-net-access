@@ -1,0 +1,12 @@
+{
+  "name": "dsh-plugin-net-access",
+  "version": "0.1.0",
+  "description": "Net Access permission mode for DeepSeek Harness (Windows): workspace-write write protection + HTTPS in the sandbox via OpenSSL curl injection.",
+  "license": "MIT",
+  "private": true,
+  "dsh": {
+    "bundle": {
+      "patch": "./plugin/cordis.patch.yml"
+    }
+  }
+}
