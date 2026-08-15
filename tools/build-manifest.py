@@ -4,7 +4,7 @@ import os
 import tarfile
 import urllib.request
 
-REPO = r"D:\共享文件夹\dsh-plugin-net-access"
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATCHES = os.path.join(REPO, "patches")
 VERSION = "0.1.0-rc.6"
 
