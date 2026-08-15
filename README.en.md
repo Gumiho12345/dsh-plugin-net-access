@@ -1,4 +1,6 @@
 # dsh-plugin-net-access
+<img width="168" height="20" alt="image" src="https://github.com/user-attachments/assets/9a25acb7-ca76-4ac3-91cd-3f727d788683" />
+
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Gumiho12345/dsh-plugin-net-access?style=social&label=Star)](https://github.com/Gumiho12345/dsh-plugin-net-access/stargazers)
