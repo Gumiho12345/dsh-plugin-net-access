@@ -51,14 +51,14 @@ schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030e)
 - 二者在同一令牌内互斥 → **任何基于 `CreateRestrictedToken` 的 Windows 沙箱都无法让 Schannel 工作**。这不是配置错误，是平台约束。
 - Linux（bwrap/Landlock）与 macOS（Seatbelt）的沙箱不限制网络，无此问题 —— 这是 Windows 特有问题。
 
-## 6. net-access 设计
+## 6. net-access 设计（v1 方案，已被 §9 修订版取代）
 
 在保持 WRITE_RESTRICTED（写保护不变）的前提下：
 1. 限制 SID 加入 **Authenticated Users / INTERACTIVE / LOCAL**（恢复 WMI/CIM、读取、正常用户组）；
 2. 保留默认特权（flags=12）；
 3. 结果：写保护 ✅、WMI ✅、读取 ✅、Python/OpenSSL HTTPS ✅；Schannel ❌（硬限制，如实文档化）。
 
-## 7. WMI/CIM 风险分析
+## 7. WMI/CIM 风险分析（针对 v1 的恢复方案；v2 已不恢复 WMI）
 
 - WMI 按调用者令牌做 ACL 判断，**不是提权通道**：net-access 下能读到的就是该账户正常能看到的系统元数据（进程/服务/硬件/账户名/网络配置）；
 - 操作类调用（如 `Win32_Process.Create`）受受限令牌约束，子进程继承受限令牌，仍写不了工作区外；

@@ -56,6 +56,14 @@ if ($SkipDownload) {
             Expand-Archive -Path $zip -DestinationPath (Join-Path $work 'x') -Force
             $curlExe = Get-ChildItem (Join-Path $work 'x') -Recurse -Filter 'curl.exe' -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
             if (-not $curlExe) { throw 'curl.exe not found inside the downloaded archive' }
+            # sanity checks (curl.se publishes no .sha256 assets; integrity rests on
+            # HTTPS + zip CRC from Expand-Archive + these checks):
+            # 1) version must match the downloaded archive
+            $vline = (& $curlExe --version 2>&1 | Select-Object -First 1)
+            $ver = [regex]::Match($url, 'curl-([0-9.]+)_[0-9]+-win64-mingw\.zip').Groups[1].Value
+            if ($ver -eq '' -or $vline -notmatch ("curl " + [regex]::Escape($ver))) { throw "curl version mismatch - expected $ver, got: $vline" }
+            # 2) backend must NOT be Schannel (that is the whole point)
+            if ($vline -match 'Schannel') { throw 'downloaded curl uses the Schannel backend - unusable in net-access; expected an OpenSSL/LibreSSL build' }
             $binDir = Split-Path $curlExe
             Copy-Item $curlExe (Join-Path $ToolBin 'curl.exe') -Force
             $ca = Join-Path $binDir 'curl-ca-bundle.crt'

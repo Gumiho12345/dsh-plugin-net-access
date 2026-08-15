@@ -41,6 +41,7 @@ $plan = @()
 $blockers = @()
 $found = @{}
 foreach ($root in $roots) {
+  Write-Host "== install root: $root"
   foreach ($entry in $Manifest.targets) {
     $target = Join-Path $root $entry.file
     if (-not (Test-Path $target)) { continue }
@@ -96,7 +97,7 @@ if (Test-Path $profilePatch) {
   $content = Get-Content $profilePatch -Raw -ErrorAction SilentlyContinue
   if ($content -notmatch 'net-access') {
     Copy-Item $profilePatch "$profilePatch.netaccess.bak" -Force
-    Copy-Item (Join-Path $Repo 'patches\profile-cordis.patch.yml') $profilePatch -Force
+    Copy-Item (Join-Path $Repo 'plugin\cordis.patch.yml') $profilePatch -Force
     Write-Host "preset installed: $profilePatch (backup: $profilePatch.netaccess.bak)"
   } else {
     Write-Host "preset already present: $profilePatch"

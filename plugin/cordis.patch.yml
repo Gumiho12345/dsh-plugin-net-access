@@ -1,4 +1,7 @@
-# dsh-plugin-net-access: permission preset layer.
+# dsh-plugin-net-access: permission preset layer (single source of truth —
+# install.ps1 copies this file into the web profile; keep no other copy).
+# net-access = workspace-write write protection + OpenSSL curl tooling
+# injection; WMI stays unavailable (strict token).
 # Replaces the dsh-base `permission` row config entirely (patches replace the
 # row's whole config, so every preset is restated here).
 # NOTE: this preset only takes effect together with the engine patch pack
