@@ -46,11 +46,13 @@ v1 为恢复 WMI 而把 Authenticated Users/INTERACTIVE 加进了限制 SID 列�
 在你自己的控制台执行一次（把 OpenSSL/LibreSSL 版 curl 放到 runner 约定的目录）：
 
 ```powershell
+# 1) 从 https://curl.se/windows/ 下载官方 win64 版 curl 并解压（任意目录）
+# 2) 把 curl.exe 和 CA 证书复制到约定位置（<解压目录> 换成你的实际路径）：
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.dsh\netaccess-tools\bin" | Out-Null
-Copy-Item 'D:\共享文件夹\curl\curl-8.21.0_7-win64-mingw\bin\curl.exe', 'D:\共享文件夹\curl\curl-8.21.0_7-win64-mingw\bin\curl-ca-bundle.crt' "$env:USERPROFILE\.dsh\netaccess-tools\bin\"
+Copy-Item "<解压目录>\bin\curl.exe", "<解压目录>\bin\curl-ca-bundle.crt" "$env:USERPROFILE\.dsh\netaccess-tools\bin\"
 ```
 
-（官方 OpenSSL/LibreSSL 版 curl 从 https://curl.se/windows/ 下载；也可用 `DSH_NETACCESS_TOOLBIN` 环境变量指向其他目录。）
+`%USERPROFILE%\.dsh\netaccess-tools\bin` 是**通用位置**（每台机器自动解析到各自用户目录），也可用环境变量 `DSH_NETACCESS_TOOLBIN` 指向其他目录。
 
 ### 3. 预设注册（二选一）
 
@@ -106,6 +108,16 @@ docs/findings-zh.md        # 完整调查记录（WRITE_RESTRICTED vs SSPI 死�
 assets/net-access-icon.svg
 extras/dsh-launcher.ps1    # 可选后台启停启动器
 ```
+
+## 通用性说明（换机器/别人能用吗）
+
+**机制层：完全通用。** 补丁只使用标准 Windows 机制（CreateRestrictedToken/WRITE_RESTRICTED、能力 SID、PATH/CURL_CA_BUNDLE 注入），不依赖任何单机特殊配置；写边界行为（用户数据 DENIED、C:\根 DENIED、Public 可写）由 **Windows 默认 ACL** 决定，任何正常安装的 Windows 行为一致。安装脚本自动发现各机器的 DSH 安装位置（npm 缓存/`~/.dsh/profiles`/全局 npm），工具箱位置 `%USERPROFILE%\.dsh\netaccess-tools\bin` 逐机解析。
+
+**版本层：绑定 dsh rc.6。** 补丁打在 rc.6 的构建产物（lib/ 编译文件）上，换 DSH 版本需重新对齐（SHA256 校验会立刻提示不匹配）。
+
+**使用前提**：Windows + Node.js + DSH `0.1.0-rc.6` + 自备 OpenSSL/LibreSSL 版 curl（curl.se 下载）。
+
+**分享给别人**：仓库当前为 private，需在 GitHub 仓库 Settings 里改为 public 后，别人才能 `git clone` 或 `dsh plugin add`；对方按"安装"三步执行即可。
 
 ## 上游化建议
 
