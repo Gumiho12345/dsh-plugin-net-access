@@ -24,7 +24,7 @@ The sandbox token stays exactly the same as workspace-write; the runner just pre
 
 ## Install
 
-Option 1: via npm (registers the permission preset automatically)
+Option 1: via npm
 
 ```powershell
 npx @deepseek-ai/dsh plugin --profile web add dsh-plugin-net-access
