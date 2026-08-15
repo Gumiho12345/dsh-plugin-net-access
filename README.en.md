@@ -45,6 +45,7 @@ Set-Content "$env:USERPROFILE\Desktop\t.txt" x
 These come from the mechanism, not from configuration:
 
 - The built-in curl and `Invoke-WebRequest` still don't work — they use Schannel, which cannot work under a restricted token. Use the bundled `curl.exe`, python or node.
+- git over HTTPS fails in the sandbox too — switch backends first with `git config --global http.sslBackend openssl`.
 - `C:\Users\Public` stays writable (same as workspace-write) — `Everyone` is a mandatory keep-alive group of the restricted token; removing it stops the process from starting.
 - WMI is unavailable, same as workspace-write.
 - Pinned to `0.1.0-rc.6`: reinstalling is needed after a DSH upgrade. `setup.ps1` verifies file hashes and aborts on mismatch instead of silently overwriting anything.

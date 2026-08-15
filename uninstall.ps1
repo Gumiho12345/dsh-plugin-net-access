@@ -45,4 +45,10 @@ if (Test-Path $pb) {
   Write-Host 'preset restored'
 }
 
+$toolDir = Join-Path $env:USERPROFILE '.dsh\netaccess-tools'
+if (Test-Path $toolDir) {
+  Remove-Item $toolDir -Recurse -Force
+  Write-Host "toolbox removed: $toolDir"
+}
+
 Write-Host "Uninstall done: $restored files restored. Restart dsh to apply."

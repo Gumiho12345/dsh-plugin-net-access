@@ -5,6 +5,7 @@
 # ASCII-only on purpose (PS 5.1 + cmd encoding pitfalls with Chinese text).
 param(
     [string]$ToolBin = (Join-Path $env:USERPROFILE '.dsh\netaccess-tools\bin'),
+    [string]$CurlVersion = '8.21.0_7',
     [switch]$SkipDownload
 )
 $ErrorActionPreference = 'Stop'
@@ -25,18 +26,10 @@ if ($SkipDownload) {
         $work = Join-Path $env:TEMP ("dsh-curl-" + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Force -Path $work | Out-Null
         try {
-            # --- resolve the latest win64-mingw zip URL from curl.se/windows ---
-            $page = $null
-            try { $page = (Invoke-WebRequest -Uri 'https://curl.se/windows/' -UseBasicParsing -TimeoutSec 30).Content } catch {}
-            if (-not $page) {
-                try { $page = (& python -c "import urllib.request;print(urllib.request.urlopen('https://curl.se/windows/',timeout=30).read().decode('utf-8','replace'))" 2>$null | Out-String) } catch {}
-            }
-            if (-not $page) { throw "cannot fetch https://curl.se/windows/ - download curl manually and put curl.exe + curl-ca-bundle.crt into $ToolBin" }
-            $m = [regex]::Match($page, 'href="([^"]*dl-[^"]*win64-mingw\.zip)"')
-            if (-not $m.Success) { throw 'no win64-mingw download link found on curl.se/windows' }
-            $url = $m.Groups[1].Value
-            if ($url.StartsWith('/')) { $url = 'https://curl.se' + $url }
-            elseif (-not $url.StartsWith('http')) { $url = 'https://curl.se/windows/' + $url }
+            # Pinned version (bump $CurlVersion after verifying a newer curl.se
+            # build): deterministic, no HTML parsing, and the sanity checks below
+            # still guard against a wrong/corrupt download.
+            $url = "https://curl.se/windows/dl-$CurlVersion/curl-$CurlVersion-win64-mingw.zip"
             Write-Host "downloading $url"
 
             # --- download (IWR first, python urllib as fallback) ---

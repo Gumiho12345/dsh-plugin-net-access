@@ -1,0 +1,30 @@
+name: check
+
+on: [push, pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: verify patch hashes, LF endings and JSON validity
+        run: |
+          python - <<'EOF'
+          import hashlib, json, pathlib
+          manifest = json.loads(pathlib.Path("manifest.json").read_text())
+          json.loads(pathlib.Path("plugin/package.json").read_text())
+          bad = []
+          for t in manifest["targets"]:
+              p = pathlib.Path("patches") / t["file"]
+              if not p.exists():
+                  bad.append(f"missing {t['file']}"); continue
+              data = p.read_bytes()
+              h = hashlib.sha256(data).hexdigest()
+              if h != t["sha256"]:
+                  bad.append(f"hash mismatch {t['file']}: {h} != {t['sha256']}")
+              if b"\r\n" in data:
+                  bad.append(f"CRLF in {t['file']} (gitattributes should keep patches as LF)")
+          if bad:
+              print("\n".join(bad)); raise SystemExit(1)
+          print(f"OK: {len(manifest['targets'])} patch hashes and LF endings verified")
+          EOF
