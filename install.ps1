@@ -12,9 +12,20 @@ function Get-DshRoots {
   $npmCache = $null
   try { $npmCache = (npm config get cache 2>$null).Trim() } catch {}
   $candidates = @()
-  if ($npmCache) { $candidates += (Join-Path $npmCache '_npx') }
-  $candidates += (Join-Path $env:LOCALAPPDATA 'npm-cache\_npx')
-  $candidates += (Join-Path $env:USERPROFILE '.npm\_npx')
+  $npxDirs = @()
+  if ($npmCache) { $npxDirs += (Join-Path $npmCache '_npx') }
+  $npxDirs += (Join-Path $env:LOCALAPPDATA 'npm-cache\_npx')
+  $npxDirs += (Join-Path $env:USERPROFILE '.npm\_npx')
+  foreach ($npx in $npxDirs) {
+    if (-not (Test-Path $npx)) { continue }
+    # npm's npx cache layout is _npx\<hash>\node_modules\@deepseek-ai, so
+    # every hash subdirectory is a candidate root (the _npx dir itself is
+    # kept for older flat layouts).
+    $candidates += $npx
+    Get-ChildItem $npx -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+      $candidates += (Join-Path $_.FullName 'node_modules')
+    }
+  }
   $candidates += (Join-Path $env:USERPROFILE '.dsh\profiles\node_modules')
   $candidates += (Join-Path $env:USERPROFILE '.dsh\profiles\web\node_modules')
   foreach ($c in $candidates) {
