@@ -1,6 +1,6 @@
 # dsh-plugin-net-access installer
 # Phase 1 (preflight) verifies every target against the manifest ORIGINAL hash
-# (pristine 0.1.0-rc.6) and aborts BEFORE touching anything on mismatch.
+# (pristine 0.1.0-rc.7) and aborts BEFORE touching anything on mismatch.
 # Phase 2 backs up (*.netaccess.bak), overwrites, and verifies the patched hash.
 # Idempotent: already-patched files are skipped.
 $ErrorActionPreference = 'Stop'
@@ -45,7 +45,7 @@ function Get-Sha256($path) { (Get-FileHash $path -Algorithm SHA256).Hash.ToLower
 $roots = @(Get-DshRoots)
 if ($roots.Count -eq 0) {
   Write-Host "ABORT: no DSH installation found (scanned npm caches, ~/.dsh/profiles and npm global)."
-  Write-Host "Install DeepSeek Harness 0.1.0-rc.6 first (npx @deepseek-ai/dsh web), then re-run this script."
+  Write-Host "Install DeepSeek Harness 0.1.0-rc.7 first (npx @deepseek-ai/dsh web), then re-run this script."
   exit 1
 }
 $plan = @()
@@ -78,12 +78,12 @@ foreach ($root in $roots) {
 }
 $missing = @($Manifest.targets | Where-Object { -not $found[$_.file] } | ForEach-Object { $_.file })
 if ($missing.Count -gt 0) {
-  Write-Host "ABORT: these patched files were not found in any DSH installation (is this DeepSeek Harness 0.1.0-rc.6?):"
+  Write-Host "ABORT: these patched files were not found in any DSH installation (is this DeepSeek Harness 0.1.0-rc.7?):"
   $missing | ForEach-Object { Write-Host "  $_" }
   exit 1
 }
 if ($blockers.Count -gt 0) {
-  Write-Host "ABORT: installed files do not match DeepSeek Harness 0.1.0-rc.6 originals - DSH version differs or files were modified. Nothing was changed:"
+  Write-Host "ABORT: installed files do not match DeepSeek Harness 0.1.0-rc.7 originals - DSH version differs or files were modified. Nothing was changed:"
   $blockers | ForEach-Object { Write-Host $_ }
   exit 1
 }

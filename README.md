@@ -9,7 +9,7 @@
 
 DSH 的权限模式补丁：新增 **Net Access** 模式，在保持 workspace-write 文件写保护的基础上，恢复沙箱内的 HTTPS 访问。
 
-DSH 的 Windows 沙箱（workspace-write）会拦截走 Schannel 的 HTTPS 请求（报 `0x8009030E`），系统自带的 curl 和 Invoke-WebRequest 都无法使用。Net Access 模式的文件写保护与 workspace-write 一致，同时让沙箱内的 HTTPS 恢复正常。仅支持 Windows、DSH `0.1.0-rc.6`。
+DSH 的 Windows 沙箱（workspace-write）会拦截走 Schannel 的 HTTPS 请求（报 `0x8009030E`），系统自带的 curl 和 Invoke-WebRequest 都无法使用。Net Access 模式的文件写保护与 workspace-write 一致，同时让沙箱内的 HTTPS 恢复正常。仅支持 Windows、DSH `0.1.0-rc.7`。
 
 ## 作用
 
@@ -57,7 +57,7 @@ Set-Content "$env:USERPROFILE\Desktop\t.txt" x
 - git 的 HTTPS 需要先执行 `git config --global http.sslBackend openssl`。
 - `C:\Users\Public` 可写（workspace-write 也一样）。
 - WMI 不可用（和 workspace-write 一样）。
-- 补丁绑定 DSH `0.1.0-rc.6`：升级 DSH 后需要重装，`setup.ps1` 会校验并中止。
+- 补丁绑定 DSH `0.1.0-rc.7`：升级 DSH 后需要重装，`setup.ps1` 会校验并中止。
 
 ## 卸载
 

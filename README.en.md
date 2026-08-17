@@ -9,7 +9,7 @@
 
 A permission-mode patch for DSH: adds a **Net Access** mode that keeps the workspace-write file protection while restoring HTTPS inside the sandbox.
 
-DSH's Windows sandbox (workspace-write) blocks Schannel-based HTTPS requests (error `0x8009030E`), so the built-in curl and Invoke-WebRequest don't work inside it. Net Access keeps the exact same file-write protection as workspace-write and makes HTTPS work again in the sandbox. Windows + DSH `0.1.0-rc.6` only.
+DSH's Windows sandbox (workspace-write) blocks Schannel-based HTTPS requests (error `0x8009030E`), so the built-in curl and Invoke-WebRequest don't work inside it. Net Access keeps the exact same file-write protection as workspace-write and makes HTTPS work again in the sandbox. Windows + DSH `0.1.0-rc.7` only.
 
 ## What it does
 
@@ -57,7 +57,7 @@ Set-Content "$env:USERPROFILE\Desktop\t.txt" x
 - git over HTTPS needs `git config --global http.sslBackend openssl` first.
 - `C:\Users\Public` stays writable (same as workspace-write).
 - WMI is unavailable (same as workspace-write).
-- Pinned to DSH `0.1.0-rc.6`: reinstall after upgrading; `setup.ps1` verifies and aborts on mismatch.
+- Pinned to DSH `0.1.0-rc.7`: reinstall after upgrading; `setup.ps1` verifies and aborts on mismatch.
 
 ## Uninstall
 

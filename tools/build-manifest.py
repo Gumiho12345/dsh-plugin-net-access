@@ -6,7 +6,7 @@ import urllib.request
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATCHES = os.path.join(REPO, "patches")
-VERSION = "0.1.0-rc.6"
+VERSION = "0.1.0-rc.7"
 
 # package -> list of (target file relative to repo patches dir, file inside tarball package/)
 PKGS = {
@@ -76,8 +76,8 @@ finally:
 
 manifest = {
     "name": "dsh-plugin-net-access",
-    "version": "0.1.0",
-    "note": "Patched files for DeepSeek Harness 0.1.0-rc.6 (built bundles). install.ps1 verifies the ORIGINAL hash before overwriting and aborts on mismatch.",
+    "version": "0.2.0",
+    "note": "Patched files for DeepSeek Harness 0.1.0-rc.7 (built bundles). install.ps1 verifies the ORIGINAL hash before overwriting and aborts on mismatch.",
     "targets": targets,
 }
 with open(os.path.join(REPO, "manifest.json"), "w", encoding="utf-8") as f:

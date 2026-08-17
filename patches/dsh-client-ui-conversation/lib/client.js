@@ -2691,8 +2691,8 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var StatsLine_module_css_default = {
-			"sep": "FJxK0a_sep",
-			"root": "FJxK0a_root"
+			"root": "FJxK0a_root",
+			"sep": "FJxK0a_sep"
 		};
 		//#endregion
 		//#region lib/types/client/chat/StatsLine.js
@@ -2881,23 +2881,23 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ContextMeter_module_css_default = {
-			"trigger": "JObwrW_trigger",
-			"track": "JObwrW_track",
-			"row": "JObwrW_row",
 			"header": "JObwrW_header",
-			"percent": "JObwrW_percent",
 			"headline": "JObwrW_headline",
-			"bar": "JObwrW_bar",
-			"swatch": "JObwrW_swatch",
-			"rows": "JObwrW_rows",
 			"segment": "JObwrW_segment",
-			"panel": "JObwrW_panel",
-			"fill": "JObwrW_fill",
-			"colorMessages": "JObwrW_colorMessages",
-			"colorTools": "JObwrW_colorTools",
 			"colorSystem": "JObwrW_colorSystem",
+			"fill": "JObwrW_fill",
+			"row": "JObwrW_row",
+			"track": "JObwrW_track",
+			"root": "JObwrW_root",
+			"rows": "JObwrW_rows",
+			"bar": "JObwrW_bar",
 			"figures": "JObwrW_figures",
-			"root": "JObwrW_root"
+			"swatch": "JObwrW_swatch",
+			"trigger": "JObwrW_trigger",
+			"panel": "JObwrW_panel",
+			"colorTools": "JObwrW_colorTools",
+			"colorMessages": "JObwrW_colorMessages",
+			"percent": "JObwrW_percent"
 		};
 		//#endregion
 		//#region lib/types/client/skeleton/ContextMeter.js
@@ -3069,10 +3069,10 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var PermissionSelect_module_css_default = {
-			"chevronOpen": "Sh0Q9G_chevronOpen",
-			"chevron": "Sh0Q9G_chevron",
-			"triggerLabel": "Sh0Q9G_triggerLabel",
 			"triggerIcon": "Sh0Q9G_triggerIcon",
+			"chevronOpen": "Sh0Q9G_chevronOpen",
+			"triggerLabel": "Sh0Q9G_triggerLabel",
+			"chevron": "Sh0Q9G_chevron",
 			"trigger": "Sh0Q9G_trigger"
 		};
 		//#endregion
@@ -3299,6 +3299,37 @@ window.__ModuleLoader__.load({
 			})] });
 		}
 		//#endregion
+		//#region lib/types/client/skeleton/safari.js
+		/** Safari-specific textarea layout recovery for the conversation composer. */
+		const ALTERNATE_IOS_BROWSER = /\b(?:CriOS|FxiOS|EdgiOS|OPiOS|OPT|DuckDuckGo|Brave)(?:\/|\b)/;
+		/**
+		* Detect Safari's `Version/... Safari/...` form while excluding known alternate iOS browser tokens.
+		* @param identity - Browser user-agent and vendor values.
+		* @returns Whether the identity should use the Safari-specific recovery.
+		*/
+		function isSafariBrowser(identity) {
+			return identity.vendor === "Apple Computer, Inc." && /\bVersion\/[\d.]+.*\bSafari\/[\d.]+/.test(identity.userAgent) && !ALTERNATE_IOS_BROWSER.test(identity.userAgent);
+		}
+		/**
+		* Repair Safari's stale native textarea layout and the scrollport auto height it can contaminate.
+		* @param input - Composer textarea whose own scrollable overflow must stay zero.
+		*/
+		function repairSafariTextareaLayout(input) {
+			if (input === null || input.scrollHeight <= input.clientHeight) return;
+			const scrollport = input.closest("[data-input-scroll]");
+			if (scrollport === null) return;
+			const inputHeight = input.style.height;
+			input.style.height = `${String(input.clientHeight + 1)}px`;
+			input.offsetHeight;
+			input.style.height = inputHeight;
+			input.offsetHeight;
+			const scrollportHeight = scrollport.style.height;
+			scrollport.style.height = `${String(scrollport.clientHeight + 1)}px`;
+			scrollport.offsetHeight;
+			scrollport.style.height = scrollportHeight;
+			scrollport.offsetHeight;
+		}
+		//#endregion
 		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-conversation/src/client/skeleton/InputBar.module.css.mjs
 		const css$17 = "@font-face{font-family:DshChipCell;src:url(data:font/ttf;base64,AAEAAAAKAIAAAwAgT1MvMkT8SmIAAAEoAAAAYGNtYXAADQBPAAABkAAAADRnbHlmAAAAAAAAAcwAAAABaGVhZCwtPGoAAACsAAAANmhoZWEDIg7bAAAA5AAAACRobXR4EZQAAAAAAYgAAAAIbG9jYQAAAAAAAAHEAAAABm1heHAAAwACAAABCAAAACBuYW1lvljk2gAAAdAAAABscG9zdNNweNQAAAI8AAAALQABAAAAAQAAdia1tV8PPPUAAwPoAAAAAOaLfcUAAAAA5ot9xQAAAAAAAAAAAAAAAwACAAAAAAAAAAEAAAMg/zgAAA+gAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAACAAEAAAACAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAwjKAZAABQAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAPz8/PwAA//z//AMg/zgAAAMgAMgAAAAAAAAAAAAAAAAAAAAgAAAB9AAAD6AAAAAAAAIAAAADAAAAFAADAAEAAAAUAAQAIAAAAAQABAABAAD//P//AAD//P//AAUAAQAAAAAAAAAAAAAAAAAAAAAAAAAEADYAAQAAAAAAAQALAAAAAQAAAAAAAgAHAAsAAwABBAkAAQAWABIAAwABBAkAAgAOAChEc2hDaGlwQ2VsbFJlZ3VsYXIARABzAGgAQwBoAGkAcABDAGUAbABsAFIAZQBnAHUAbABhAHIAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAABAgZvYmpyZXAAAAA=)format(\"truetype\")}.uV2eYG_root{padding:0 var(--dsh-composer-side-clearance) 8px;flex-direction:column;align-items:center;display:flex}.uV2eYG_hero{padding:0 var(--dsh-composer-side-clearance)}.uV2eYG_notice{width:100%;max-width:var(--dsh-composer-card-max-width);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);border-radius:8px;margin-bottom:6px;padding:4px 8px;font-size:12px;line-height:18px}.uV2eYG_noticeError{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-state-error-primary)}.uV2eYG_card{box-sizing:border-box;width:100%;max-width:var(--dsh-composer-card-max-width);border:1px solid var(--dsw-alias-border-l2-darkmode-thin);background:var(--dsw-specific-input-major);box-shadow:var(--dsw-shadow-lv2);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);border-radius:22px;flex-direction:column;gap:12px;padding-top:10px;font-size:16px;line-height:24px;display:flex;position:relative}.uV2eYG_cardWorkspaceTrigger{cursor:pointer;border-color:#0000}.uV2eYG_cardWorkspaceTrigger:after{content:\"\";background:var(--dsw-alias-border-l4);pointer-events:none;border-radius:22px;transition:background-color .1s;position:absolute;inset:-1px;-webkit-mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='none' rx='22' ry='22' stroke='black' stroke-width='2' stroke-dasharray='4 4'/%3E%3C/svg%3E\");mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='none' rx='22' ry='22' stroke='black' stroke-width='2' stroke-dasharray='4 4'/%3E%3C/svg%3E\")}.uV2eYG_cardWorkspaceTrigger :disabled{pointer-events:none}.uV2eYG_cardWorkspaceTrigger:hover:after{background:var(--dsw-alias-state-business-primary)}.uV2eYG_accessory{align-items:center;gap:8px;padding:10px 12px 0;display:flex}.uV2eYG_attachments{min-width:0;padding:4px 12px 0}.uV2eYG_overlayAnchor{height:0;position:absolute;inset:0 0 auto}.uV2eYG_scroll{max-height:var(--dsh-composer-text-max-height);overflow-y:auto}.uV2eYG_grow{position:relative}.uV2eYG_backdrop{color:var(--dsw-alias-label-primary);pointer-events:none;position:absolute;inset:0;overflow:hidden}.uV2eYG_hlToken{color:var(--dsw-alias-state-warn-label);background-color:#0000}.uV2eYG_hlSegment{color:#0000;background-color:#0000;border-radius:4px}.uV2eYG_hint{color:var(--dsw-alias-label-caption)}.uV2eYG_pending{background:var(--dsw-alias-state-business-primary);border-radius:50%;width:8px;height:8px;animation:1s ease-in-out infinite alternate uV2eYG_input-pending}@keyframes uV2eYG_input-pending{0%{opacity:.35}to{opacity:1}}.uV2eYG_input{resize:none;color:#0000;width:100%;height:100%;caret-color:var(--dsw-alias-state-business-primary);background:0 0;border:none;outline:none;position:absolute;inset:0;overflow:hidden}.uV2eYG_input,.uV2eYG_mirror,.uV2eYG_backdrop{box-sizing:border-box;font-family:\"DshChipCell\", var(--dsw-font-family);font-size:inherit;line-height:inherit;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;padding:4px 12px 0 16px}.uV2eYG_input::placeholder{color:var(--dsw-alias-label-caption);user-select:none}.uV2eYG_input:disabled{color:var(--dsw-alias-label-tertiary);cursor:not-allowed}.uV2eYG_input[aria-haspopup=menu]{cursor:pointer}.uV2eYG_mirror{visibility:hidden;pointer-events:none}.uV2eYG_hero .uV2eYG_mirror{min-height:52px}.uV2eYG_row{justify-content:space-between;align-items:center;gap:12px;min-width:0;padding:2px 8px 6px;display:flex;container-type:inline-size}.uV2eYG_tools,.uV2eYG_modes,.uV2eYG_trailing{align-items:center;min-width:0;display:flex}.uV2eYG_tools{gap:16px}.uV2eYG_modes{gap:12px}.uV2eYG_trailing{flex:none;gap:12px}.uV2eYG_add{background:var(--dsw-specific-selector);width:28px;height:28px;color:var(--dsw-alias-label-primary);cursor:pointer;border:none;border-radius:999px;flex:none;place-items:center;display:grid}.uV2eYG_add:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover-solid)}.uV2eYG_add:disabled{opacity:.5;cursor:default}.uV2eYG_select{max-width:220px;height:28px;color:var(--dsw-alias-label-secondary);white-space:nowrap;cursor:pointer;appearance:none;background-color:#0000;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%2381858C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\");background-position:right 4px center;background-repeat:no-repeat;background-size:12px 12px;border:none;border-radius:8px;outline:none;padding:0 20px 0 8px;font-size:13px;font-weight:500;line-height:20px}.uV2eYG_select:hover:not(:disabled){background-color:var(--dsw-alias-interactive-bg-hover)}.uV2eYG_select:disabled{opacity:.5;cursor:default}.uV2eYG_primary{background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;border:none;border-radius:999px;flex:none;place-items:center;width:34px;height:34px;transition:background-color .1s;display:grid;transform:translateY(-2px)}.uV2eYG_primary:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.uV2eYG_primary:disabled{opacity:.4;cursor:default}.uV2eYG_retry{color:inherit;cursor:pointer;background:0 0;border:1px solid;border-radius:4px;margin-left:8px;padding:1px 8px;font-size:12px}.uV2eYG_textRef{color:var(--dsw-alias-state-business-primary);-webkit-box-decoration-break:clone;box-decoration-break:clone;background-color:#0000}.uV2eYG_textRef:after{display:none}.uV2eYG_chip{background:#6187d838;border-radius:6px;position:relative}.uV2eYG_chip:before{content:\"￼\";color:#0000}.uV2eYG_chipLabel{width:calc(138.889% - 10px);color:var(--dsw-alias-label-primary);white-space:nowrap;justify-content:center;align-items:center;display:flex;position:absolute;top:50%;left:50%;overflow:hidden;transform:translate(-50%,-50%)scale(.72)}.uV2eYG_chipInvalid{opacity:.7;background:#d8616133;text-decoration:line-through}";
 		const tagId$17 = "@deepseek-ai/dsh-client-ui-conversation/InputBar.module.css";
@@ -3310,37 +3341,37 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var InputBar_module_css_default = {
-			"overlayAnchor": "uV2eYG_overlayAnchor",
-			"chip": "uV2eYG_chip",
-			"accessory": "uV2eYG_accessory",
-			"mirror": "uV2eYG_mirror",
-			"card": "uV2eYG_card",
-			"grow": "uV2eYG_grow",
-			"root": "uV2eYG_root",
-			"hlToken": "uV2eYG_hlToken",
-			"input": "uV2eYG_input",
-			"modes": "uV2eYG_modes",
-			"trailing": "uV2eYG_trailing",
-			"primary": "uV2eYG_primary",
-			"textRef": "uV2eYG_textRef",
-			"chipLabel": "uV2eYG_chipLabel",
-			"notice": "uV2eYG_notice",
-			"select": "uV2eYG_select",
-			"hero": "uV2eYG_hero",
 			"hlSegment": "uV2eYG_hlSegment",
-			"add": "uV2eYG_add",
-			"attachments": "uV2eYG_attachments",
-			"cardWorkspaceTrigger": "uV2eYG_cardWorkspaceTrigger",
-			"tools": "uV2eYG_tools",
-			"scroll": "uV2eYG_scroll",
+			"textRef": "uV2eYG_textRef",
+			"trailing": "uV2eYG_trailing",
 			"noticeError": "uV2eYG_noticeError",
-			"hint": "uV2eYG_hint",
-			"row": "uV2eYG_row",
-			"chipInvalid": "uV2eYG_chipInvalid",
-			"pending": "uV2eYG_pending",
 			"backdrop": "uV2eYG_backdrop",
+			"scroll": "uV2eYG_scroll",
+			"add": "uV2eYG_add",
+			"chipInvalid": "uV2eYG_chipInvalid",
+			"mirror": "uV2eYG_mirror",
+			"chipLabel": "uV2eYG_chipLabel",
+			"accessory": "uV2eYG_accessory",
+			"card": "uV2eYG_card",
+			"retry": "uV2eYG_retry",
+			"hero": "uV2eYG_hero",
+			"select": "uV2eYG_select",
+			"hint": "uV2eYG_hint",
+			"hlToken": "uV2eYG_hlToken",
+			"overlayAnchor": "uV2eYG_overlayAnchor",
+			"input": "uV2eYG_input",
+			"row": "uV2eYG_row",
+			"pending": "uV2eYG_pending",
+			"modes": "uV2eYG_modes",
 			"input-pending": "uV2eYG_input-pending",
-			"retry": "uV2eYG_retry"
+			"attachments": "uV2eYG_attachments",
+			"chip": "uV2eYG_chip",
+			"cardWorkspaceTrigger": "uV2eYG_cardWorkspaceTrigger",
+			"grow": "uV2eYG_grow",
+			"primary": "uV2eYG_primary",
+			"root": "uV2eYG_root",
+			"tools": "uV2eYG_tools",
+			"notice": "uV2eYG_notice"
 		};
 		//#endregion
 		//#region lib/types/client/skeleton/InputBar.js
@@ -3402,6 +3433,8 @@ window.__ModuleLoader__.load({
 			const dragDepthRef = (0, react.useRef)(0);
 			const scrollRef = (0, react.useRef)(null);
 			const mirrorRef = (0, react.useRef)(null);
+			const safari = (0, react.useMemo)(() => isSafariBrowser(navigator), []);
+			const safariNativeShrinkRef = (0, react.useRef)(false);
 			const composingRef = (0, react.useRef)(false);
 			const onCompositionStart = () => {
 				composingRef.current = true;
@@ -3429,6 +3462,11 @@ window.__ModuleLoader__.load({
 				input?.imageIds,
 				inputActions
 			]);
+			(0, react.useLayoutEffect)(() => {
+				const nativeShrink = safariNativeShrinkRef.current;
+				safariNativeShrinkRef.current = false;
+				if (safari && nativeShrink) repairSafariTextareaLayout(inputRef.current);
+			}, [draft, safari]);
 			(0, react.useEffect)(() => {
 				if (preview !== null && !attachments.some((attachment) => attachment.id === preview.id)) setPreview(null);
 			}, [attachments, preview]);
@@ -3539,6 +3577,7 @@ window.__ModuleLoader__.load({
 				if (keyboard === void 0 || locked) return;
 				if (machineBusy) return;
 				const next = e.target.value;
+				safariNativeShrinkRef.current = safari && next.length < draft.length;
 				keyboard.setDraft(next);
 				keyboard.track(next, e.target.selectionStart ?? next.length);
 			};
@@ -3982,12 +4021,12 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var EnterBehaviorRow_module_css_default = {
-			"row": "T1PP_q_row",
-			"rowText": "T1PP_q_rowText",
-			"chevron": "T1PP_q_chevron",
 			"desc": "T1PP_q_desc",
+			"rowText": "T1PP_q_rowText",
 			"selector": "T1PP_q_selector",
-			"title": "T1PP_q_title"
+			"chevron": "T1PP_q_chevron",
+			"title": "T1PP_q_title",
+			"row": "T1PP_q_row"
 		};
 		//#endregion
 		//#region lib/types/client/settings/EnterBehaviorRow.js
@@ -4060,33 +4099,33 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var MessageItem_module_css_default = {
-			"turnErrorRow": "gdEzaW_turnErrorRow",
-			"turnErrorCode": "gdEzaW_turnErrorCode",
+			"retry-shimmer": "gdEzaW_retry-shimmer",
+			"retrySummary": "gdEzaW_retrySummary",
+			"retryText": "gdEzaW_retryText",
+			"compactionRow": "gdEzaW_compactionRow",
 			"retryRow": "gdEzaW_retryRow",
-			"turnErrorMessage": "gdEzaW_turnErrorMessage",
-			"compactionTitle": "gdEzaW_compactionTitle",
-			"contextRow": "gdEzaW_contextRow",
+			"retryDetailLabel": "gdEzaW_retryDetailLabel",
+			"refChip": "gdEzaW_refChip",
+			"turnErrorTitle": "gdEzaW_turnErrorTitle",
+			"retryDetails": "gdEzaW_retryDetails",
 			"compactionSep": "gdEzaW_compactionSep",
 			"turnErrorCopy": "gdEzaW_turnErrorCopy",
-			"turnErrorTitle": "gdEzaW_turnErrorTitle",
-			"userRow": "gdEzaW_userRow",
-			"maxTokensTitle": "gdEzaW_maxTokensTitle",
-			"bubble": "gdEzaW_bubble",
-			"turnErrorDot": "gdEzaW_turnErrorDot",
-			"retry-shimmer": "gdEzaW_retry-shimmer",
-			"refChip": "gdEzaW_refChip",
+			"turnErrorMessage": "gdEzaW_turnErrorMessage",
 			"compactionDisclosureIcon": "gdEzaW_compactionDisclosureIcon",
-			"compactionButton": "gdEzaW_compactionButton",
-			"compactionBody": "gdEzaW_compactionBody",
-			"retryText": "gdEzaW_retryText",
+			"contextRow": "gdEzaW_contextRow",
 			"compactionSummary": "gdEzaW_compactionSummary",
-			"compactionContextIcon": "gdEzaW_compactionContextIcon",
-			"compactionRow": "gdEzaW_compactionRow",
-			"retryDetails": "gdEzaW_retryDetails",
-			"retrySummary": "gdEzaW_retrySummary",
+			"turnErrorCode": "gdEzaW_turnErrorCode",
+			"turnErrorDot": "gdEzaW_turnErrorDot",
+			"turnErrorRow": "gdEzaW_turnErrorRow",
+			"maxTokensTitle": "gdEzaW_maxTokensTitle",
+			"compactionTitle": "gdEzaW_compactionTitle",
+			"compactionButton": "gdEzaW_compactionButton",
+			"bubble": "gdEzaW_bubble",
 			"userStack": "gdEzaW_userStack",
+			"compactionContextIcon": "gdEzaW_compactionContextIcon",
 			"compactionLeading": "gdEzaW_compactionLeading",
-			"retryDetailLabel": "gdEzaW_retryDetailLabel"
+			"compactionBody": "gdEzaW_compactionBody",
+			"userRow": "gdEzaW_userRow"
 		};
 		//#endregion
 		//#region lib/types/client/chat/CompactionItem.js
@@ -4158,29 +4197,29 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ContextBody_module_css_default = {
+			"filePath": "NM4-hq_filePath",
+			"fileAction": "NM4-hq_fileAction",
+			"entryName": "NM4-hq_entryName",
+			"file": "NM4-hq_file",
+			"relaySender": "NM4-hq_relaySender",
+			"fields": "NM4-hq_fields",
+			"recallCounts": "NM4-hq_recallCounts",
+			"fieldValue": "NM4-hq_fieldValue",
 			"field": "NM4-hq_field",
+			"entries": "NM4-hq_entries",
+			"recalls": "NM4-hq_recalls",
+			"catalogNotice": "NM4-hq_catalogNotice",
+			"recallLabel": "NM4-hq_recallLabel",
+			"fieldKey": "NM4-hq_fieldKey",
+			"sectionName": "NM4-hq_sectionName",
+			"recall": "NM4-hq_recall",
+			"sections": "NM4-hq_sections",
+			"entry": "NM4-hq_entry",
+			"text": "NM4-hq_text",
 			"entryDescription": "NM4-hq_entryDescription",
 			"files": "NM4-hq_files",
-			"sections": "NM4-hq_sections",
-			"fieldKey": "NM4-hq_fieldKey",
-			"catalogNotice": "NM4-hq_catalogNotice",
-			"fields": "NM4-hq_fields",
-			"entry": "NM4-hq_entry",
-			"sectionName": "NM4-hq_sectionName",
-			"sectionText": "NM4-hq_sectionText",
-			"recall": "NM4-hq_recall",
-			"relaySender": "NM4-hq_relaySender",
-			"recallLabel": "NM4-hq_recallLabel",
-			"filePath": "NM4-hq_filePath",
-			"entries": "NM4-hq_entries",
-			"entryName": "NM4-hq_entryName",
-			"fileAction": "NM4-hq_fileAction",
-			"file": "NM4-hq_file",
 			"section": "NM4-hq_section",
-			"text": "NM4-hq_text",
-			"recalls": "NM4-hq_recalls",
-			"recallCounts": "NM4-hq_recallCounts",
-			"fieldValue": "NM4-hq_fieldValue"
+			"sectionText": "NM4-hq_sectionText"
 		};
 		//#endregion
 		//#region lib/types/client/chat/ContextBody.js
@@ -4715,11 +4754,11 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ContextInjectionRow_module_css_default = {
+			"chevron": "pC0e7a_chevron",
 			"source": "pC0e7a_source",
 			"summary": "pC0e7a_summary",
 			"body": "pC0e7a_body",
 			"sep": "pC0e7a_sep",
-			"chevron": "pC0e7a_chevron",
 			"root": "pC0e7a_root"
 		};
 		//#endregion
@@ -4818,9 +4857,9 @@ window.__ModuleLoader__.load({
 			"actions": "p-xYUq_actions",
 			"timeStart": "p-xYUq_timeStart",
 			"runTimeDot": "p-xYUq_runTimeDot",
-			"visuallyHidden": "p-xYUq_visuallyHidden",
 			"action": "p-xYUq_action",
-			"timeEnd": "p-xYUq_timeEnd"
+			"timeEnd": "p-xYUq_timeEnd",
+			"visuallyHidden": "p-xYUq_visuallyHidden"
 		};
 		//#endregion
 		//#region lib/types/client/chat/MessageIconActions.js
@@ -5213,19 +5252,19 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ChatView_module_css_default = {
-			"toBottom": "Md3f7G_toBottom",
-			"column": "Md3f7G_column",
-			"callRow": "Md3f7G_callRow",
-			"turnStatusClock": "Md3f7G_turnStatusClock",
-			"flowItem": "Md3f7G_flowItem",
-			"scroll": "Md3f7G_scroll",
-			"hint": "Md3f7G_hint",
-			"toBottomSlot": "Md3f7G_toBottomSlot",
-			"older": "Md3f7G_older",
-			"turnStatus": "Md3f7G_turnStatus",
-			"root": "Md3f7G_root",
 			"dsh-turn-status-shimmer": "Md3f7G_dsh-turn-status-shimmer",
-			"openError": "Md3f7G_openError"
+			"turnStatusClock": "Md3f7G_turnStatusClock",
+			"callRow": "Md3f7G_callRow",
+			"hint": "Md3f7G_hint",
+			"root": "Md3f7G_root",
+			"openError": "Md3f7G_openError",
+			"older": "Md3f7G_older",
+			"flowItem": "Md3f7G_flowItem",
+			"toBottomSlot": "Md3f7G_toBottomSlot",
+			"turnStatus": "Md3f7G_turnStatus",
+			"column": "Md3f7G_column",
+			"toBottom": "Md3f7G_toBottom",
+			"scroll": "Md3f7G_scroll"
 		};
 		//#endregion
 		//#region lib/types/client/chat/ChatNodeSeat.js
@@ -5702,15 +5741,15 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ApprovalPanel_module_css_default = {
-			"card": "bqrRRG_card",
-			"command": "bqrRRG_command",
-			"actionRow": "bqrRRG_actionRow",
-			"root": "bqrRRG_root",
-			"body": "bqrRRG_body",
-			"headline": "bqrRRG_headline",
 			"reject": "bqrRRG_reject",
+			"actionRow": "bqrRRG_actionRow",
 			"dot": "bqrRRG_dot",
-			"strip": "bqrRRG_strip"
+			"strip": "bqrRRG_strip",
+			"body": "bqrRRG_body",
+			"command": "bqrRRG_command",
+			"card": "bqrRRG_card",
+			"root": "bqrRRG_root",
+			"headline": "bqrRRG_headline"
 		};
 		//#endregion
 		//#region lib/types/client/skeleton/ApprovalPanel.js
@@ -6149,21 +6188,21 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var TodoPanel_module_css_default = {
-			"glyph": "lXshSW_glyph",
-			"glyphCompleted": "lXshSW_glyphCompleted",
 			"item": "lXshSW_item",
-			"title": "lXshSW_title",
-			"glyphProgress": "lXshSW_glyphProgress",
-			"glyphPending": "lXshSW_glyphPending",
-			"chevron": "lXshSW_chevron",
-			"todo-progress-spin": "lXshSW_todo-progress-spin",
-			"root": "lXshSW_root",
 			"header": "lXshSW_header",
+			"todo-progress-spin": "lXshSW_todo-progress-spin",
+			"glyph": "lXshSW_glyph",
+			"content": "lXshSW_content",
+			"glyphProgress": "lXshSW_glyphProgress",
 			"body": "lXshSW_body",
+			"glyphCompleted": "lXshSW_glyphCompleted",
+			"root": "lXshSW_root",
+			"chevron": "lXshSW_chevron",
 			"lead": "lXshSW_lead",
 			"list": "lXshSW_list",
 			"progress": "lXshSW_progress",
-			"content": "lXshSW_content"
+			"glyphPending": "lXshSW_glyphPending",
+			"title": "lXshSW_title"
 		};
 		//#endregion
 		//#region lib/types/client/skeleton/TodoPanel.js
@@ -6356,18 +6395,18 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var QueueDock_module_css_default = {
-			"dock": "_7yHdaG_dock",
-			"list": "_7yHdaG_list",
-			"panel": "_7yHdaG_panel",
+			"chevron": "_7yHdaG_chevron",
 			"row": "_7yHdaG_row",
-			"header": "_7yHdaG_header",
-			"count": "_7yHdaG_count",
-			"preview": "_7yHdaG_preview",
+			"editor": "_7yHdaG_editor",
 			"actions": "_7yHdaG_actions",
+			"list": "_7yHdaG_list",
+			"preview": "_7yHdaG_preview",
+			"dock": "_7yHdaG_dock",
 			"action": "_7yHdaG_action",
 			"lead": "_7yHdaG_lead",
-			"editor": "_7yHdaG_editor",
-			"chevron": "_7yHdaG_chevron"
+			"panel": "_7yHdaG_panel",
+			"count": "_7yHdaG_count",
+			"header": "_7yHdaG_header"
 		};
 		//#endregion
 		//#region lib/types/client/queue/QueueDock.js
@@ -6625,23 +6664,23 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var HeroShell_module_css_default = {
-			"workspaceLabel": "pXSMma_workspaceLabel",
-			"headline": "pXSMma_headline",
-			"chevron": "pXSMma_chevron",
-			"fish": "pXSMma_fish",
-			"stack": "pXSMma_stack",
-			"workspace": "pXSMma_workspace",
-			"modalInput": "pXSMma_modalInput",
-			"modalError": "pXSMma_modalError",
-			"modalAction": "pXSMma_modalAction",
-			"body": "pXSMma_body",
-			"hero-fish-swim": "pXSMma_hero-fish-swim",
-			"workspaceRow": "pXSMma_workspaceRow",
 			"folder": "pXSMma_folder",
+			"previewBadge": "pXSMma_previewBadge",
+			"modalError": "pXSMma_modalError",
+			"workspace": "pXSMma_workspace",
+			"chevron": "pXSMma_chevron",
+			"modalAction": "pXSMma_modalAction",
+			"workspaceRow": "pXSMma_workspaceRow",
+			"headline": "pXSMma_headline",
+			"stack": "pXSMma_stack",
+			"fish": "pXSMma_fish",
 			"root": "pXSMma_root",
 			"fishHitbox": "pXSMma_fishHitbox",
+			"modalInput": "pXSMma_modalInput",
+			"hero-fish-swim": "pXSMma_hero-fish-swim",
+			"workspaceLabel": "pXSMma_workspaceLabel",
 			"headlineText": "pXSMma_headlineText",
-			"previewBadge": "pXSMma_previewBadge"
+			"body": "pXSMma_body"
 		};
 		//#endregion
 		//#region lib/types/client/skeleton/EmptyHero.js
@@ -6791,28 +6830,28 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ConversationRoot_module_css_default = {
-			"headerActions": "wSkVaW_headerActions",
-			"crumb": "wSkVaW_crumb",
-			"tab": "wSkVaW_tab",
-			"tabs": "wSkVaW_tabs",
 			"titleRow": "wSkVaW_titleRow",
-			"composerHero": "wSkVaW_composerHero",
-			"header": "wSkVaW_header",
-			"crumbCurrent": "wSkVaW_crumbCurrent",
-			"headerHidden": "wSkVaW_headerHidden",
 			"viewArea": "wSkVaW_viewArea",
-			"heroWorkspaceRow": "wSkVaW_heroWorkspaceRow",
-			"titleCluster": "wSkVaW_titleCluster",
+			"headerUtilities": "wSkVaW_headerUtilities",
+			"composerHero": "wSkVaW_composerHero",
+			"crumbs": "wSkVaW_crumbs",
+			"composerSeat": "wSkVaW_composerSeat",
+			"tabs": "wSkVaW_tabs",
+			"heroGlow": "wSkVaW_heroGlow",
+			"tabActive": "wSkVaW_tabActive",
+			"crumbSep": "wSkVaW_crumbSep",
+			"crumbCurrent": "wSkVaW_crumbCurrent",
+			"headerActions": "wSkVaW_headerActions",
 			"composerStack": "wSkVaW_composerStack",
 			"scrollBody": "wSkVaW_scrollBody",
+			"tab": "wSkVaW_tab",
 			"crumbSeg": "wSkVaW_crumbSeg",
-			"crumbSep": "wSkVaW_crumbSep",
-			"headerUtilities": "wSkVaW_headerUtilities",
-			"tabActive": "wSkVaW_tabActive",
-			"heroGlow": "wSkVaW_heroGlow",
-			"composerSeat": "wSkVaW_composerSeat",
-			"crumbs": "wSkVaW_crumbs",
-			"root": "wSkVaW_root"
+			"root": "wSkVaW_root",
+			"headerHidden": "wSkVaW_headerHidden",
+			"titleCluster": "wSkVaW_titleCluster",
+			"header": "wSkVaW_header",
+			"crumb": "wSkVaW_crumb",
+			"heroWorkspaceRow": "wSkVaW_heroWorkspaceRow"
 		};
 		//#endregion
 		//#region lib/types/client/skeleton/ConversationRoot.js
@@ -7088,15 +7127,15 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var DetailsPanel_module_css_default = {
-			"body": "ydkMvW_body",
 			"code": "ydkMvW_code",
-			"sectionLabel": "ydkMvW_sectionLabel",
-			"section": "ydkMvW_section",
 			"close": "ydkMvW_close",
-			"root": "ydkMvW_root",
+			"body": "ydkMvW_body",
+			"section": "ydkMvW_section",
+			"empty": "ydkMvW_empty",
 			"header": "ydkMvW_header",
 			"title": "ydkMvW_title",
-			"empty": "ydkMvW_empty"
+			"root": "ydkMvW_root",
+			"sectionLabel": "ydkMvW_sectionLabel"
 		};
 		//#endregion
 		//#region lib/types/client/skeleton/DetailsPanel.js
@@ -8949,15 +8988,15 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ReasoningRow_module_css_default = {
+			"leading": "QWLzlG_leading",
+			"dsh-reasoning-row-sweep": "QWLzlG_dsh-reasoning-row-sweep",
+			"chevron": "QWLzlG_chevron",
+			"separator": "QWLzlG_separator",
 			"thinkBody": "QWLzlG_thinkBody",
 			"row": "QWLzlG_row",
-			"root": "QWLzlG_root",
-			"separator": "QWLzlG_separator",
-			"chevron": "QWLzlG_chevron",
-			"dsh-reasoning-row-sweep": "QWLzlG_dsh-reasoning-row-sweep",
 			"summary": "QWLzlG_summary",
-			"title": "QWLzlG_title",
-			"leading": "QWLzlG_leading"
+			"root": "QWLzlG_root",
+			"title": "QWLzlG_title"
 		};
 		//#endregion
 		//#region lib/types/client/chat/ReasoningRow.js
@@ -9043,9 +9082,9 @@ window.__ModuleLoader__.load({
 		}
 		var AssistantMarkdown_module_css_default = {
 			"body": "Sxvs8a_body",
-			"root": "Sxvs8a_root",
+			"actions": "Sxvs8a_actions",
 			"stopped": "Sxvs8a_stopped",
-			"actions": "Sxvs8a_actions"
+			"root": "Sxvs8a_root"
 		};
 		//#endregion
 		//#region lib/types/client/chat/AssistantMarkdown.js
@@ -9159,14 +9198,14 @@ window.__ModuleLoader__.load({
 		}
 		var GenericCommandCard_module_css_default = {
 			"root": "_Xvjua_root",
+			"dsh-command-row-sweep": "_Xvjua_dsh-command-row-sweep",
 			"separator": "_Xvjua_separator",
-			"leading": "_Xvjua_leading",
-			"chevron": "_Xvjua_chevron",
-			"summary": "_Xvjua_summary",
 			"body": "_Xvjua_body",
 			"row": "_Xvjua_row",
-			"title": "_Xvjua_title",
-			"dsh-command-row-sweep": "_Xvjua_dsh-command-row-sweep"
+			"leading": "_Xvjua_leading",
+			"summary": "_Xvjua_summary",
+			"chevron": "_Xvjua_chevron",
+			"title": "_Xvjua_title"
 		};
 		//#endregion
 		//#region lib/types/client/chat/GenericCommandCard.js
@@ -9301,8 +9340,8 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var TurnTailNodeView_module_css_default = {
-			"root": "osXY9a_root",
-			"actions": "osXY9a_actions"
+			"actions": "osXY9a_actions",
+			"root": "osXY9a_root"
 		};
 		//#endregion
 		//#region lib/types/client/chat/TurnTailNodeView.js

@@ -5061,11 +5061,6 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 				details: object({ ns: string() })
 			}),
 			object({
-				code: literal("settings-not-exposed"),
-				message: string(),
-				details: object({ ns: string() })
-			}),
-			object({
 				code: literal("settings-conflict"),
 				message: string(),
 				details: object({

@@ -5,7 +5,7 @@
 # Replaces the dsh-base `permission` row config entirely (patches replace the
 # row's whole config, so every preset is restated here).
 # NOTE: this preset only takes effect together with the engine patch pack
-# (install.ps1) — rc.6's closed mode vocabulary cannot be extended by config
+# (install.ps1) — rc.7's closed mode vocabulary cannot be extended by config
 # alone. See README.md.
 - id: permission
   config:
