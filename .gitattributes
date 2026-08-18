@@ -1,4 +1,7 @@
-# Patches are byte-exact: no EOL conversion ever (manifest hashes are LF-based).
+# Patches are byte-exact: no EOL conversion ever (recipes must match byte-for-byte).
 patches/** -text
+# Recipe/JSON and generator sources: keep LF so recipe strings stay byte-stable.
+manifest.json text eol=lf
+*.py text eol=lf
 # PowerShell scripts: always CRLF on checkout (Windows convention).
 *.ps1 text eol=crlf

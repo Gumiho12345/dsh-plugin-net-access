@@ -1,52 +1,189 @@
 {
   "name": "dsh-plugin-net-access",
-  "version": "0.2.0",
-  "note": "Patched files for DeepSeek Harness 0.1.0-rc.7 (built bundles). install.ps1 verifies the ORIGINAL hash before overwriting and aborts on mismatch.",
-  "targets": [
+  "version": "0.3.0",
+  "note": "Anchor-based patch recipes for DeepSeek Harness (no version pinning): install.ps1 locates structural anchors in the installed bundles, inserts/replaces net-access code, and verifies markers before writing.",
+  "recipes": [
     {
       "file": "dsh-sandbox-policy/lib/index.js",
-      "original": "59b17a98d4235890cdf93eaa47b1871c7b3e0a359ea71b6f571e3c79265c3814",
-      "sha256": "1ae95e7f04967f9e60290548fe821e81abc00da16b21dc2df56822e082cfe330"
+      "steps": [
+        {
+          "type": "insert",
+          "before": "\t\"danger-full-access\"",
+          "lines": "\t\"net-access\","
+        },
+        {
+          "type": "insert",
+          "before": "\t\tcase \"danger-full-access\": return \"Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.\";",
+          "lines": "\t\tcase \"net-access\": return `Current DSH file policy: net-access. File writes are confined exactly like workspace-write (workspace + permitted temporary areas; user data, C:\\ root and system locations stay write-protected; C:\\Users\\Public stays writable \u2014 Everyone is the restricted token's mandatory keep-alive group). Network tooling is enabled: when DSH_NETACCESS_TOOLBIN (default ~/.dsh/netaccess-tools/bin) holds a non-Schannel curl, PATH is prepended and CURL_CA_BUNDLE set so curl.exe HTTPS works. Windows outbound SSPI (Schannel: system curl, Invoke-WebRequest) cannot work under any restricted-token mode \u2014 use the bundled curl/python/node, or escalate to danger-full-access. WMI/CIM stays unavailable under the strict token.`;"
+        },
+        {
+          "type": "insert",
+          "before": "\t\t\t\"danger-full-access\"",
+          "lines": "\t\t\t\"net-access\","
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     },
     {
       "file": "dsh-sandbox/lib/index.js",
-      "original": "63ee2a10873a336162acd9a0d7da7f5f3dc59d072456a0b5271da277565e324f",
-      "sha256": "f32acb248fe6c9cae6abd8e0639403629f0b47b8202293dcffacbd662a5050cc"
+      "steps": [
+        {
+          "type": "replace",
+          "from": "\t\"read-only\": [\"workspace-write\", \"danger-full-access\"],\n\t\"workspace-write\": [\"danger-full-access\"]",
+          "to": "\t\"read-only\": [\"workspace-write\", \"net-access\", \"danger-full-access\"],\n\t\"workspace-write\": [\"net-access\", \"danger-full-access\"],\n\t\"net-access\": [\"danger-full-access\"]"
+        },
+        {
+          "type": "replace",
+          "from": "const ESCALATION_TARGETS = [\"workspace-write\", \"danger-full-access\"];",
+          "to": "const ESCALATION_TARGETS = [\"workspace-write\", \"net-access\", \"danger-full-access\"];"
+        },
+        {
+          "type": "replace",
+          "from": "\tif (policy.mode !== \"workspace-write\") return [];",
+          "to": "\tif (policy.mode !== \"workspace-write\" && policy.mode !== \"net-access\") return [];"
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     },
     {
       "file": "dsh-permission-presets/lib/index.js",
-      "original": "f19f19b55ba6e43d0c99a479df1dc651f288aa42d68f74d9196872710578c69e",
-      "sha256": "012150ec7062e860cd9bf117f3025c5d074c6e5b7ce2cc2c099669c461447df7"
+      "steps": [
+        {
+          "type": "insert",
+          "before": "\t\t\t},\n\t\t\t\"danger-full-access\": {",
+          "lines": "\t\t\t},\n\t\t\t\"net-access\": {\n\t\t\t\tsandbox: \"net-access\",\n\t\t\t\tapproval: \"ask\",\n\t\t\t\tname: \"net-access\",\n\t\t\t\tdescription: \"File writes strictly confined like workspace-write; network tooling (OpenSSL curl) enabled. Schannel HTTPS still requires full access.\""
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     },
     {
       "file": "dsh-sandbox-windows-acl/lib/runner.js",
-      "original": "01ccd99079a0f9861b1bfae5b7a6291599e9e1552612c497c4b46c8dc1024e29",
-      "sha256": "4cca5119f9cc49430314989ef681b1f07587f7f216e2658f622fad79542b2c1d"
+      "steps": [
+        {
+          "type": "replace",
+          "from": "import { join } from \"node:path\";",
+          "to": "import { delimiter as pathDelimiter, join } from \"node:path\";"
+        },
+        {
+          "type": "replace",
+          "from": "\tif (mode !== \"read-only\" && mode !== \"workspace-write\") fail(`unknown mode: ${String(mode)}`);",
+          "to": "\tif (mode !== \"read-only\" && mode !== \"workspace-write\" && mode !== \"net-access\") fail(`unknown mode: ${String(mode)}`);"
+        },
+        {
+          "type": "insert",
+          "before": "\tconst seamManaged = parsed.writeSid !== void 0 || parsed.tempWriteSid !== void 0;",
+          "lines": "\tif (parsed.mode === \"net-access\") {\n\t\t// Network tooling environment: if a non-Schannel curl lives in\n\t\t// DSH_NETACCESS_TOOLBIN (default ~/.dsh/netaccess-tools/bin), prepend it\n\t\t// to PATH so `curl.exe` resolves to the OpenSSL/LibreSSL build and point\n\t\t// CURL_CA_BUNDLE at its CA file. Schannel itself cannot work under the\n\t\t// restricted token (WRITE_RESTRICTED vs LSA, verified); this is how HTTPS\n\t\t// becomes usable in net-access without loosening the token.\n\t\tconst userHome = process.env.USERPROFILE ?? \"\";\n\t\tconst toolBin = process.env.DSH_NETACCESS_TOOLBIN ?? join(userHome, \".dsh\", \"netaccess-tools\", \"bin\");\n\t\tif (toolBin !== \"\" && existsSync(toolBin)) {\n\t\t\tprocess.env.PATH = `${toolBin}${pathDelimiter}${process.env.PATH ?? \"\"}`;\n\t\t\tfor (const ca of [\"curl-ca-bundle.crt\", \"cacert.pem\", \"ca-bundle.crt\"]) {\n\t\t\t\tconst caPath = join(toolBin, ca);\n\t\t\t\tif (existsSync(caPath)) {\n\t\t\t\t\tprocess.env.CURL_CA_BUNDLE = caPath;\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}"
+        },
+        {
+          "type": "replace",
+          "from": "\tif (parsed.mode === \"workspace-write\" && parsed.writeSid === void 0 !== (parsed.tempWriteSid === void 0)) fail(\"workspace-write requires --write-sid and --temp-write-sid together\");",
+          "to": "\tif ((parsed.mode === \"workspace-write\" || parsed.mode === \"net-access\") && parsed.writeSid === void 0 !== (parsed.tempWriteSid === void 0)) fail(`${parsed.mode} requires --write-sid and --temp-write-sid together`);"
+        },
+        {
+          "type": "replace",
+          "from": "\t\tif (parsed.mode === \"workspace-write\") {",
+          "to": "\t\tif (parsed.mode === \"workspace-write\" || parsed.mode === \"net-access\") {"
+        },
+        {
+          "type": "replace",
+          "from": "\t\t\twritableDirs: parsed.mode === \"workspace-write\" ? [parsed.workspace] : [],",
+          "to": "\t\t\twritableDirs: parsed.mode === \"workspace-write\" || parsed.mode === \"net-access\" ? [parsed.workspace] : [],"
+        }
+      ],
+      "markers": [
+        "DSH_NETACCESS_TOOLBIN"
+      ]
     },
     {
       "file": "dsh-sandbox-windows-acl/lib/types-CNjZgO4h.js",
-      "original": "d75087768cc528fec521c8e93259ff3b37a9fb4d3c627f132ea76f23fb4b4f54",
-      "sha256": "07b69a493ddf6631bcf3e655cf2fabc46423366ed39de3cdf55d4c3b9a418c07"
+      "steps": [
+        {
+          "type": "replace",
+          "from": "\tif (api.createRestrictedToken(currentToken, 13, 0, null, 0, null, restrictingSids.length / 16, restrictingSids, tokenSlot) === 0) throwLastError(api, \"CreateRestrictedToken\", `restricting SIDs: ${restrictingSids.length / 16}`);",
+          "to": "\t// WRITE_RESTRICTED stays for every mode: it is required for the process to\n\t// start at all (verified: without it the child dies with STATUS_DLL_NOT_FOUND)\n\t// and it is precisely what gates writes to the workspace/temp capability SIDs.\n\t// net-access uses the SAME strict token as workspace-write (no extra groups,\n\t// no privileges) \u2014 its network capability comes from the runner's tooling\n\t// environment (see runner.js), never from a looser token.\n\tconst disableFlags = 13;\n\tif (api.createRestrictedToken(currentToken, disableFlags, 0, null, 0, null, restrictingSids.length / 16, restrictingSids, tokenSlot) === 0) throwLastError(api, \"CreateRestrictedToken\", `restricting SIDs: ${restrictingSids.length / 16}`);"
+        },
+        {
+          "type": "replace",
+          "from": "\t\tif (this.mode === \"workspace-write\" && this.writeSid === void 0) throw new Error(\"AclSandbox workspace-write requires a write SID \u2014 derive it from the workspace via workspaceWriteSid()\");\n\t\tif (this.mode === \"workspace-write\" && this.tempDirOption === void 0) throw new Error(\"AclSandbox workspace-write requires an explicit private temp directory or null\");",
+          "to": "\t\tconst writeMode = this.mode === \"workspace-write\" || this.mode === \"net-access\";\n\t\tif (writeMode && this.writeSid === void 0) throw new Error(`AclSandbox ${this.mode} requires a write SID \u2014 derive it from the workspace via workspaceWriteSid()`);\n\t\tif (writeMode && this.tempDirOption === void 0) throw new Error(`AclSandbox ${this.mode} requires an explicit private temp directory or null`);"
+        },
+        {
+          "type": "replace",
+          "from": "\t\tif (this.mode === \"workspace-write\" && this.tempDirOption !== null && this.tempWriteSid === void 0) throw new Error(\"AclSandbox workspace-write with temp requires a temp write SID \u2014 derive it via tempWriteSid()\");",
+          "to": "\t\tif (writeMode && this.tempDirOption !== null && this.tempWriteSid === void 0) throw new Error(`AclSandbox ${this.mode} with temp requires a temp write SID \u2014 derive it via tempWriteSid()`);"
+        },
+        {
+          "type": "replace",
+          "from": "\t\t\trestrictedToken = createRestrictedToken(api, currentToken, logonSid, [this.writeSidPtr, this.tempWriteSidPtr].filter((sid) => sid !== void 0), { world: worldSid }, this.mode);",
+          "to": "\t\t\tconst known = { world: worldSid };\n\t\t\trestrictedToken = createRestrictedToken(api, currentToken, logonSid, [this.writeSidPtr, this.tempWriteSidPtr].filter((sid) => sid !== void 0), known, this.mode);"
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     },
     {
       "file": "dsh-sandbox-local/lib/index.js",
-      "original": "fa5489c0017f89574d610ea470e1d8cd2a45a9f355ef936c0fb689966f2f8c3a",
-      "sha256": "21eb4d727f91704d4809f066321c695ac542a4c06a5bd3102531faf50918fd60"
+      "steps": [
+        {
+          "type": "replace",
+          "from": "\tif (policy.mode === \"workspace-write\") {",
+          "to": "\tif (policy.mode === \"workspace-write\" || policy.mode === \"net-access\") {"
+        },
+        {
+          "type": "replace",
+          "from": "\tif (policy.mode === \"workspace-write\") readWrite.push(\"/tmp\", policy.workspaceRoot);",
+          "to": "\tif (policy.mode === \"workspace-write\" || policy.mode === \"net-access\") readWrite.push(\"/tmp\", policy.workspaceRoot);"
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     },
     {
       "file": "dsh-tool-pwsh/lib/index.js",
-      "original": "75612e8ec2e8fe18bdb8b4d026b113e3017845e85385db1277ec41e08137a920",
-      "sha256": "3cb6637c904aef361e2be9290177f4568c88aaf892c26f4b1961d30559288977"
+      "steps": [
+        {
+          "type": "replace",
+          "from": "\treturn base + \" Under the Windows sandbox, read-only pwsh runs in PowerShell ConstrainedLanguage mode, while workspace-write stays in FullLanguage unless host policy says otherwise. In read-only, prefer cmdlets and core types (`[string]`, `[datetime]`, `[regex]`, `[guid]`); .NET static calls (`[System.IO.*]::`, `[math]::`), `Add-Type`, COM objects, and reflection fail with \\\"only core types\\\" errors. `-f` formatting, property access, and core cmdlets work. In both confined modes, programs cannot open named pipes, so a command that captures another program's output through piped stdio (Node.js `child_process.spawn`/`exec` with the default `stdio: 'pipe'`) fails with EPERM, while `stdio: 'inherit'` and `stdio: 'ignore'` spawns work and PowerShell's own pipelines are unaffected. That EPERM is the documented boundary: do not retry the command another way \u2014 escalate the exact command once or restructure it to avoid capturing output. Attempting a command the sandbox may deny is safe and expected: run it and read the marker rather than assuming the denial. When a command is denied and a wider mode would let it succeed, escalate immediately in the same turn \u2014 the one sanctioned exception to a denial: retry the exact same command once with `sandbox_permissions` (the narrowest wider mode that suffices) plus a one-sentence `justification`. Do not detour through chat to ask permission first \u2014 the approval prompt raised by that retry is how the user consents. If the session states approval prompts are disabled, there is no exception: a denial is final \u2014 do not set `sandbox_permissions`. Never escalate speculatively: ground the request in a real denial \u2014 normally the one this command just hit; escalating up front is fine only when this session already denied the same access. A rejected escalation is final for that command \u2014 stop and explain, never work around it \u2014 but it does not forbid attempting or escalating other commands later.\";",
+          "to": "\treturn base + \" Under the Windows sandbox, read-only pwsh runs in PowerShell ConstrainedLanguage mode, while workspace-write and net-access stay in FullLanguage unless host policy says otherwise (net-access uses the same strict write token as workspace-write; it prepends a non-Schannel curl tool directory (DSH_NETACCESS_TOOLBIN, default ~/.dsh/netaccess-tools/bin) to PATH and sets CURL_CA_BUNDLE so `curl.exe` HTTPS works, while Schannel-based tools (Invoke-WebRequest) still fail \u2014 use the bundled curl/python/node, or escalate to danger-full-access). In read-only, prefer cmdlets and core types (`[string]`, `[datetime]`, `[regex]`, `[guid]`); .NET static calls (`[System.IO.*]::`, `[math]::`), `Add-Type`, COM objects, and reflection fail with \\\"only core types\\\" errors. `-f` formatting, property access, and core cmdlets work. In both confined modes, programs cannot open named pipes, so a command that captures another program's output through piped stdio (Node.js `child_process.spawn`/`exec` with the default `stdio: 'pipe'`) fails with EPERM, while `stdio: 'inherit'` and `stdio: 'ignore'` spawns work and PowerShell's own pipelines are unaffected. That EPERM is the documented boundary: do not retry the command another way \u2014 escalate the exact command once or restructure it to avoid capturing output. Attempting a command the sandbox may deny is safe and expected: run it and read the marker rather than assuming the denial. When a command is denied and a wider mode would let it succeed, escalate immediately in the same turn \u2014 the one sanctioned exception to a denial: retry the exact same command once with `sandbox_permissions` (the narrowest wider mode that suffices) plus a one-sentence `justification`. Do not detour through chat to ask permission first \u2014 the approval prompt raised by that retry is how the user consents. If the session states approval prompts are disabled, there is no exception: a denial is final \u2014 do not set `sandbox_permissions`. Never escalate speculatively: ground the request in a real denial \u2014 normally the one this command just hit; escalating up front is fine only when this session already denied the same access. A rejected escalation is final for that command \u2014 stop and explain, never work around it \u2014 but it does not forbid attempting or escalating other commands later.\";"
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     },
     {
       "file": "dsh-client-connection/lib/client.js",
-      "original": "df056b09344f5fbccbb4c94d85a13cbd32af6af5dd410557b3e1e2f9cc71b7c0",
-      "sha256": "f7df3ab0b6079de8f54b597048b89b3ccfa1d16fb1a40ddcd8365cc0063f8985"
+      "steps": [
+        {
+          "type": "insert",
+          "before": "\t\t\t\"danger-full-access\": {",
+          "lines": "\t\t\t\"net-access\": {\n\t\t\t\tsandbox: \"net-access\",\n\t\t\t\tapproval: \"ask\",\n\t\t\t\tdescription: \"File writes strictly confined like workspace-write; network tooling (OpenSSL curl) enabled. Schannel HTTPS still requires full access.\"\n\t\t\t},"
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     },
     {
       "file": "dsh-client-ui-conversation/lib/client.js",
-      "original": "0980922f58332dea0ff18079d2da728f7a81136079babf0278776d6897a45d80",
-      "sha256": "487f2824f91af67829b9a9557ea09aa78e76ec436fbe1851db3fa047252636a7"
+      "steps": [
+        {
+          "type": "insert",
+          "before": "\t\t\t\t\t})\n\t\t\t\t]\n\t\t\t}),",
+          "lines": "\t\t\t\t\t})\n\t\t\t\t]\n\t\t\t}),\n\t\t\t\"net-access\": (0, react_jsx_runtime.jsxs)(\"svg\", {\n\t\t\t\twidth: \"16\",\n\t\t\t\theight: \"16\",\n\t\t\t\tviewBox: \"0 0 16 16\",\n\t\t\t\tfill: \"none\",\n\t\t\t\t\"aria-hidden\": true,\n\t\t\t\tchildren: [\n\t\t\t\t\t(0, react_jsx_runtime.jsx)(\"path\", {\n\t\t\t\t\t\td: shieldOutline,\n\t\t\t\t\t\tstroke: \"currentColor\",\n\t\t\t\t\t\tstrokeWidth: \"1.31831\",\n\t\t\t\t\t\tstrokeLinejoin: \"round\"\n\t\t\t\t\t}),\n\t\t\t\t\t(0, react_jsx_runtime.jsx)(\"path\", {\n\t\t\t\t\t\td: \"M8.20554 4.9A2.6 2.6 0 1 0 8.20554 10.1A2.6 2.6 0 1 0 8.20554 4.9Z\",\n\t\t\t\t\t\tstroke: \"currentColor\",\n\t\t\t\t\t\tstrokeWidth: \"1.05\",\n\t\t\t\t\t\tfill: \"none\"\n\t\t\t\t\t}),\n\t\t\t\t\t(0, react_jsx_runtime.jsx)(\"path\", {\n\t\t\t\t\t\td: \"M5.60554 7.5H10.8055\",\n\t\t\t\t\t\tstroke: \"currentColor\",\n\t\t\t\t\t\tstrokeWidth: \"1.05\",\n\t\t\t\t\t\tfill: \"none\"\n\t\t\t\t\t}),\n\t\t\t\t\t(0, react_jsx_runtime.jsx)(\"path\", {\n\t\t\t\t\t\td: \"M8.20554 4.9C6.8 5.9 6.8 9.1 8.20554 10.1C9.6 9.1 9.6 5.9 8.20554 4.9Z\",\n\t\t\t\t\t\tstroke: \"currentColor\",\n\t\t\t\t\t\tstrokeWidth: \"1.05\",\n\t\t\t\t\t\tfill: \"none\""
+        }
+      ],
+      "markers": [
+        "net-access"
+      ]
     }
   ]
 }

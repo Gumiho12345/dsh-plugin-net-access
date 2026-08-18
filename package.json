@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-net-access",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Net Access permission preset for DeepSeek Harness (Windows): HTTPS works inside the sandbox while file writes stay confined like workspace-write.",
   "license": "MIT",
   "private": false,

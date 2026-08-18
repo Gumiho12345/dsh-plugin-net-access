@@ -1,8 +1,11 @@
 # dsh-plugin-net-access uninstaller
 # Restores every *.netaccess.bak file and the preset backup.
+param(
+  [string[]]$DshRoots
+)
 $ErrorActionPreference = 'Continue'
 $Repo = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Manifest = Get-Content (Join-Path $Repo 'manifest.json') -Raw | ConvertFrom-Json
+$Manifest = [System.IO.File]::ReadAllText((Join-Path $Repo 'manifest.json'), [System.Text.Encoding]::UTF8) | ConvertFrom-Json
 
 function Get-DshRoots {
   $roots = @()
@@ -36,9 +39,11 @@ function Get-DshRoots {
   $roots | Where-Object { $_ -and (Test-Path $_) } | Sort-Object -Unique
 }
 
+$roots = @()
+if ($DshRoots -and $DshRoots.Count -gt 0) { $roots = $DshRoots } else { $roots = @(Get-DshRoots) }
 $restored = 0
-foreach ($root in Get-DshRoots) {
-  foreach ($entry in $Manifest.targets) {
+foreach ($root in $roots) {
+  foreach ($entry in $Manifest.recipes) {
     $bak = Join-Path $root ($entry.file + '.netaccess.bak')
     if (Test-Path $bak) {
       Copy-Item $bak (Join-Path $root $entry.file) -Force

@@ -7,26 +7,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: verify patch hashes, LF endings and JSON validity
+      - name: verify recipes, patch LF endings and JSON validity
         run: |
           python - <<'EOF'
-          import hashlib, json, pathlib
+          import json, pathlib
+          bad = []
           manifest = json.loads(pathlib.Path("manifest.json").read_text())
           json.loads(pathlib.Path("package.json").read_text())
           if not pathlib.Path("plugin/cordis.patch.yml").exists():
               bad.append("missing plugin/cordis.patch.yml")
-          bad = []
-          for t in manifest["targets"]:
-              p = pathlib.Path("patches") / t["file"]
+          if "targets" in manifest:
+              bad.append("manifest.json still uses the legacy hash 'targets' format - re-run tools/build-recipes.py")
+          if not isinstance(manifest.get("recipes"), list) or not manifest["recipes"]:
+              bad.append("manifest.json has no recipes")
+          for r in manifest.get("recipes", []):
+              f = r.get("file"); steps = r.get("steps"); markers = r.get("markers") or []
+              if not f or not isinstance(steps, list) or not steps:
+                  bad.append(f"recipe missing file/steps: {f}"); continue
+              p = pathlib.Path("patches") / f
               if not p.exists():
-                  bad.append(f"missing {t['file']}"); continue
+                  bad.append(f"missing patch {f}"); continue
               data = p.read_bytes()
-              h = hashlib.sha256(data).hexdigest()
-              if h != t["sha256"]:
-                  bad.append(f"hash mismatch {t['file']}: {h} != {t['sha256']}")
               if b"\r\n" in data:
-                  bad.append(f"CRLF in {t['file']} (gitattributes should keep patches as LF)")
+                  bad.append(f"CRLF in {f} (gitattributes should keep patches as LF)")
+              text = data.decode("utf-8")
+              for m in markers:
+                  if m not in text:
+                      bad.append(f"marker {m!r} missing in patch {f}")
+              for s in steps:
+                  t = s.get("type")
+                  if t == "insert":
+                      if not s.get("before") or s["before"] not in text:
+                          bad.append(f"insert anchor not in patch {f}: {(s.get('before') or '')[:60]!r}")
+                      if not s.get("lines") or s["lines"] not in text:
+                          bad.append(f"insert lines not in patch {f}")
+                  elif t == "replace":
+                      if not s.get("to") or s["to"] not in text:
+                          bad.append(f"replace 'to' not in patch {f}: {(s.get('to') or '')[:60]!r}")
+                  else:
+                      bad.append(f"unknown step type in {f}: {t}")
           if bad:
               print("\n".join(bad)); raise SystemExit(1)
-          print(f"OK: {len(manifest['targets'])} patch hashes and LF endings verified")
+          print(f"OK: {len(manifest['recipes'])} recipes consistent with shipped patches (LF, markers, step texts)")
           EOF

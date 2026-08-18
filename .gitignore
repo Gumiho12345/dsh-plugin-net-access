@@ -1,2 +1,5 @@
 # npm pack / publish artifacts
 *.tgz
+
+tools/__pycache__/
+*.pyc

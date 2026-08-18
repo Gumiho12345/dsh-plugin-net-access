@@ -9,7 +9,7 @@
 
 DSH 的权限模式补丁：新增 **Net Access** 模式，在保持 workspace-write 文件写保护的基础上，恢复沙箱内的 HTTPS 访问。
 
-DSH 的 Windows 沙箱（workspace-write）会拦截走 Schannel 的 HTTPS 请求（报 `0x8009030E`），系统自带的 curl 和 Invoke-WebRequest 都无法使用。Net Access 模式的文件写保护与 workspace-write 一致，同时让沙箱内的 HTTPS 恢复正常。仅支持 Windows、DSH `0.1.0-rc.7`。
+DSH 的 Windows 沙箱（workspace-write）会拦截走 Schannel 的 HTTPS 请求（报 `0x8009030E`），系统自带的 curl 和 Invoke-WebRequest 都无法使用。Net Access 模式的文件写保护与 workspace-write 一致，同时让沙箱内的 HTTPS 恢复正常。仅支持 Windows，不绑定具体 DSH 版本。
 
 ## 作用
 
@@ -37,9 +37,11 @@ npx @deepseek-ai/dsh plugin --profile web add dsh-plugin-net-access
 .\setup.ps1
 ```
 
-`setup.ps1` 会做三件事：给引擎打补丁、注册权限预设、从 curl.se 自动下载 OpenSSL 版 curl 工具箱到 `%USERPROFILE%\.dsh\netaccess-tools\bin\`。
+`setup.ps1` 会做三件事：按结构锚点给引擎打补丁（不绑定 DSH 版本）、注册权限预设、从 curl.se 自动下载 OpenSSL 版 curl 工具箱到 `%USERPROFILE%\.dsh\netaccess-tools\bin\`。
 
 装完**必须完全重启 DSH 才能加载**：在终端 `Ctrl+C` 停掉 3080 端口的进程，重新运行 `npx @deepseek-ai/dsh web`。光刷新浏览器不会加载新插件。重启后刷新页面，在左下角权限选择器里选 **Net Access**。
+
+**升级 DSH 后**：直接重跑 `setup.ps1` 即可，不用等插件更新——补丁按结构锚点自动适配，不绑定版本号。如果新版 DSH 结构调整导致锚点找不到，安装器会明确报错并中止，不会改坏引擎（更新插件就好）。
 
 ## 验证
 
@@ -57,7 +59,6 @@ Set-Content "$env:USERPROFILE\Desktop\t.txt" x
 - git 的 HTTPS 需要先执行 `git config --global http.sslBackend openssl`。
 - `C:\Users\Public` 可写（workspace-write 也一样）。
 - WMI 不可用（和 workspace-write 一样）。
-- 补丁绑定 DSH `0.1.0-rc.7`：升级 DSH 后需要重装，`setup.ps1` 会校验并中止。
 
 ## 卸载
 

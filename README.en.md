@@ -9,7 +9,7 @@
 
 A permission-mode patch for DSH: adds a **Net Access** mode that keeps the workspace-write file protection while restoring HTTPS inside the sandbox.
 
-DSH's Windows sandbox (workspace-write) blocks Schannel-based HTTPS requests (error `0x8009030E`), so the built-in curl and Invoke-WebRequest don't work inside it. Net Access keeps the exact same file-write protection as workspace-write and makes HTTPS work again in the sandbox. Windows + DSH `0.1.0-rc.7` only.
+DSH's Windows sandbox (workspace-write) blocks Schannel-based HTTPS requests (error `0x8009030E`), so the built-in curl and Invoke-WebRequest don't work inside it. Net Access keeps the exact same file-write protection as workspace-write and makes HTTPS work again in the sandbox. Windows only; not pinned to a DSH version — the patches adapt by structural anchors.
 
 ## What it does
 
@@ -37,9 +37,11 @@ Option 2: download from GitHub and run
 .\setup.ps1
 ```
 
-`setup.ps1` does three things: patches the engine, registers the permission preset, and downloads the OpenSSL curl toolbox from curl.se into `%USERPROFILE%\.dsh\netaccess-tools\bin\`.
+`setup.ps1` does three things: patches the engine by structural anchors (not pinned to a DSH version), registers the permission preset, and downloads the OpenSSL curl toolbox from curl.se into `%USERPROFILE%\.dsh\netaccess-tools\bin\`.
 
 **A full DSH restart is required for the plugin to load**: stop the 3080 listener (Ctrl+C in its terminal, or `netstat -ano | findstr 3080` + `taskkill /F /PID <pid>`), then run `npx @deepseek-ai/dsh web` again. Refreshing the browser alone will not load the new plugin. After the restart, refresh the page and pick **Net Access** in the permission selector (bottom-left).
+
+**After a DSH upgrade**: just re-run `setup.ps1` — no need to wait for a plugin update, because the patches adapt by structural anchors instead of a version pin. If a future DSH restructure moves an anchor, the installer aborts with a clear error (nothing gets corrupted); update the plugin then.
 
 ## Verify
 
@@ -57,7 +59,6 @@ Set-Content "$env:USERPROFILE\Desktop\t.txt" x
 - git over HTTPS needs `git config --global http.sslBackend openssl` first.
 - `C:\Users\Public` stays writable (same as workspace-write).
 - WMI is unavailable (same as workspace-write).
-- Pinned to DSH `0.1.0-rc.7`: reinstall after upgrading; `setup.ps1` verifies and aborts on mismatch.
 
 ## Uninstall
 

@@ -1,11 +1,17 @@
-# dsh-plugin-net-access installer
-# Phase 1 (preflight) verifies every target against the manifest ORIGINAL hash
-# (pristine 0.1.0-rc.7) and aborts BEFORE touching anything on mismatch.
-# Phase 2 backs up (*.netaccess.bak), overwrites, and verifies the patched hash.
-# Idempotent: already-patched files are skipped.
+# dsh-plugin-net-access installer (anchor-based, no version pinning)
+# Applies the net-access patches STRUCTURALLY to whatever DSH version is
+# installed. manifest.json carries, per patched file, recipe steps
+# (insert-before-anchor / exact replace) plus verification markers, instead of
+# exact byte hashes per engine version. Surviving anchors make version bumps a
+# no-op; a missing/ambiguous anchor aborts with a clear message BEFORE anything
+# is written. The runner/UI/CLI files are patched in place after a backup
+# (*.netaccess.bak). Idempotent: files already carrying every marker are skipped.
+param(
+  [string[]]$DshRoots
+)
 $ErrorActionPreference = 'Stop'
 $Repo = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Manifest = Get-Content (Join-Path $Repo 'manifest.json') -Raw | ConvertFrom-Json
+$Manifest = [System.IO.File]::ReadAllText((Join-Path $Repo 'manifest.json'), [System.Text.Encoding]::UTF8) | ConvertFrom-Json
 
 function Get-DshRoots {
   $roots = @()
@@ -39,51 +45,113 @@ function Get-DshRoots {
   $roots | Where-Object { $_ -and (Test-Path $_) } | Sort-Object -Unique
 }
 
-function Get-Sha256($path) { (Get-FileHash $path -Algorithm SHA256).Hash.ToLower() }
+function Read-Text($path) {
+  try { return [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8) }
+  catch { return $null }
+}
+function Write-Text($path, $text) {
+  $enc = New-Object System.Text.UTF8Encoding($false)   # no BOM, byte-true
+  [System.IO.File]::WriteAllText($path, $text, $enc)
+}
+function Test-Markers($text, $markers) {
+  foreach ($m in $markers) { if (-not $text.Contains($m)) { return $false } }
+  return $true
+}
+function Find-LineBlock($text, $block) {
+  $lines = @($text -split "`n")
+  $hits = @()
+  for ($i = 0; $i -le $lines.Count - $block.Count; $i++) {
+    $match = $true
+    for ($k = 0; $k -lt $block.Count; $k++) {
+      if ($lines[$i + $k] -ne $block[$k]) { $match = $false; break }
+    }
+    if ($match) { $hits += $i }
+  }
+  if ($hits.Count -eq 0) { return -1 }
+  if ($hits.Count -gt 1) { return -2 }
+  return $hits[0]
+}
+function Shorten($s) {
+  if ($null -eq $s) { return '' }
+  $s = $s.Replace("`n", ' / ')
+  if ($s.Length -gt 70) { $s = $s.Substring(0, 70) + '...' }
+  return $s
+}
+function Apply-Recipe($text, $steps) {
+  # Throws on the first missing/ambiguous anchor; returns the patched text.
+  $lines = [System.Collections.Generic.List[string]]::new()
+  $lines.AddRange([string[]]@($text -split "`n"))
+  foreach ($step in $steps) {
+    if ($step.type -eq 'insert') {
+      $anchor = [string[]]@($step.before -split "`n")
+      $idx = Find-LineBlock ([string]::Join("`n", $lines.ToArray())) $anchor
+      if ($idx -lt 0) { throw "insert anchor missing: $(Shorten $step.before)" }
+      $ins = [string[]]@($step.lines -split "`n")
+      $lines.InsertRange($idx, $ins)
+    } elseif ($step.type -eq 'replace') {
+      $frm = [string[]]@($step.from -split "`n")
+      $idx = Find-LineBlock ([string]::Join("`n", $lines.ToArray())) $frm
+      if ($idx -lt 0) { throw "replace target missing: $(Shorten $step.from)" }
+      $to = [string[]]@($step.to -split "`n")
+      $lines.RemoveRange($idx, $frm.Count)
+      $lines.InsertRange($idx, $to)
+    } else {
+      throw "unknown recipe step type: $($step.type)"
+    }
+  }
+  return [string]::Join("`n", $lines.ToArray())
+}
 
-# ---- Phase 1: preflight (no writes) ----
-$roots = @(Get-DshRoots)
+# ---- Phase 1: plan (no writes) ----
+$roots = @()
+if ($DshRoots -and $DshRoots.Count -gt 0) {
+  $roots = @($DshRoots | Where-Object { Test-Path $_ })
+  if ($roots.Count -eq 0) { Write-Host "ABORT: none of the given -DshRoots exist."; exit 1 }
+} else {
+  $roots = @(Get-DshRoots)
+}
 if ($roots.Count -eq 0) {
   Write-Host "ABORT: no DSH installation found (scanned npm caches, ~/.dsh/profiles and npm global)."
-  Write-Host "Install DeepSeek Harness 0.1.0-rc.7 first (npx @deepseek-ai/dsh web), then re-run this script."
+  Write-Host "Install DeepSeek Harness first (npx @deepseek-ai/dsh web), then re-run this script."
   exit 1
 }
-$plan = @()
-$blockers = @()
 $found = @{}
+$blockers = @()
+$plan = @()
 foreach ($root in $roots) {
   Write-Host "== install root: $root"
-  foreach ($entry in $Manifest.targets) {
-    $target = Join-Path $root $entry.file
+  foreach ($recipe in @($Manifest.recipes)) {
+    $target = Join-Path $root $recipe.file
     if (-not (Test-Path $target)) { continue }
-    $found[$entry.file] = $true
-    $cur = Get-Sha256 $target
-    if ($cur -eq $entry.sha256) { Write-Host "ALREADY PATCHED: $($entry.file)"; continue }
-    if ($cur -ne $entry.original) {
-      $blockers += "  $target`n    installed : $cur`n    expected original: $($entry.original)"
+    $found[$recipe.file] = $true
+    $text = Read-Text $target
+    if ($null -eq $text) { $blockers += "  cannot read: $target"; continue }
+    $wasCrlf = $text.Contains("`r`n")
+    $text = $text.Replace("`r`n", "`n")
+    if (Test-Markers $text $recipe.markers) {
+      Write-Host "ALREADY PATCHED: $($recipe.file)"; continue
+    }
+    try {
+      $patched = Apply-Recipe $text $recipe.steps
+      if (-not (Test-Markers $patched $recipe.markers)) {
+        throw "markers missing after patch ($($recipe.markers -join ', '))"
+      }
+    } catch {
+      $blockers += "  $target`n    $($_.Exception.Message)"
       continue
     }
-    # Source-side preflight: the repo-side patch file must byte-match the
-    # manifest (a CRLF-mangled checkout would otherwise be copied over the
-    # engine and only then fail the post-copy verification).
-    $src = Join-Path $Repo "patches\$($entry.file)"
-    if (-not (Test-Path $src)) { $blockers += "  missing patch source: $src"; continue }
-    $srcHash = Get-Sha256 $src
-    if ($srcHash -ne $entry.sha256) {
-      $blockers += "  patch source hash mismatch (CRLF-mangled checkout?): $src`n    source : $srcHash`n    expected: $($entry.sha256)"
-      continue
-    }
-    $plan += @{ root = $root; entry = $entry; target = $target }
+    if ($wasCrlf) { $patched = $patched.Replace("`n", "`r`n") }
+    $plan += @{ root = $root; recipe = $recipe; target = $target; patched = $patched }
   }
 }
-$missing = @($Manifest.targets | Where-Object { -not $found[$_.file] } | ForEach-Object { $_.file })
+$missing = @($Manifest.recipes | Where-Object { -not $found[$_.file] } | ForEach-Object { $_.file })
 if ($missing.Count -gt 0) {
-  Write-Host "ABORT: these patched files were not found in any DSH installation (is this DeepSeek Harness 0.1.0-rc.7?):"
+  Write-Host "ABORT: these files were not found in any DSH installation:"
   $missing | ForEach-Object { Write-Host "  $_" }
   exit 1
 }
 if ($blockers.Count -gt 0) {
-  Write-Host "ABORT: installed files do not match DeepSeek Harness 0.1.0-rc.7 originals - DSH version differs or files were modified. Nothing was changed:"
+  Write-Host "ABORT: recipe anchors were not found - the installed DSH structure differs from what the plugin expects, or files were modified by something else. Nothing was changed. Update the plugin or report this:"
   $blockers | ForEach-Object { Write-Host $_ }
   exit 1
 }
@@ -94,11 +162,9 @@ if ($plan.Count -eq 0) {
 } else {
   foreach ($item in $plan) {
     $bak = "$($item.target).netaccess.bak"
-    if (-not (Test-Path $bak)) { Copy-Item $item.target $bak -Force; Write-Host "  backup: $($item.entry.file).netaccess.bak" }
-    Copy-Item (Join-Path $Repo "patches\$($item.entry.file)") $item.target -Force
-    $h = Get-Sha256 $item.target
-    if ($h -ne $item.entry.sha256) { Write-Host "VERIFY FAILED: $($item.target)"; exit 1 }
-    Write-Host "  PATCHED: $($item.entry.file)"
+    if (-not (Test-Path $bak)) { Copy-Item $item.target $bak -Force; Write-Host "  backup: $($item.recipe.file).netaccess.bak" }
+    Write-Text $item.target $item.patched
+    Write-Host "  PATCHED: $($item.recipe.file)"
   }
 }
 
